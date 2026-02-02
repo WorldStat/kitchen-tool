@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
-from recipes.views import LandingPageView 
+from recipes.views import LandingPageView, recipe_list
 
 urlpatterns = [
     path('', LandingPageView.as_view(), name='landing_page'),
