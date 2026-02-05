@@ -2,75 +2,67 @@
 
 {% block content %}
 <style>
-    .shopping-container { max-width: 600px; margin: 0 auto; }
+    .shopping-container { max-width: 600px; margin: 0 auto; padding-bottom: 80px; }
     .item-row {
         display: flex;
         align-items: center;
         padding: 15px;
         background: white;
-        border-radius: 10px;
+        border-radius: 12px;
         margin-bottom: 10px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        transition: opacity 0.3s;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         cursor: pointer;
+        transition: all 0.2s;
     }
-    
-    /* Strike-through effect when checked */
-    .item-row.checked {
-        opacity: 0.5;
-        text-decoration: line-through;
-    }
+    .item-row.checked { opacity: 0.5; }
+    .item-row.checked .item-name { text-decoration: line-through; color: #94a3b8; }
 
-    .checkbox-custom {
-        width: 22px;
-        height: 22px;
+    .checkbox-pill {
+        width: 24px; height: 24px;
         border: 2px solid var(--primary);
-        border-radius: 5px;
+        border-radius: 6px;
         margin-right: 15px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-        color: white;
+        display: flex; align-items: center; justify-content: center;
+        color: white; font-weight: bold;
     }
-
-    .checked .checkbox-custom {
-        background: var(--primary);
-    }
-    
-    .recipe-tag {
-        font-size: 0.7rem;
-        background: #f1f5f9;
-        padding: 2px 8px;
-        border-radius: 10px;
-        margin-left: auto;
-        color: #64748b;
-    }
+    .checked .checkbox-pill { background: var(--primary); }
 </style>
 
 <div class="shopping-container">
-    <div style="margin-bottom: 2rem;">
-        <a href="{% url 'recipe_list' %}" style="text-decoration:none; color:var(--primary); font-weight:600;">← Back to Cookbook</a>
-        <h2 style="margin-top:10px;">Shopping List</h2>
-        <p style="color:#666; font-size:0.9rem;">Tap items to check them off as you shop.</p>
-    </div>
-
-    {% for item in items %}
-    <div class="item-row" onclick="this.classList.toggle('checked')">
-        <div class="checkbox-custom">✓</div>
-        <span class="item-name">{{ item.name }}</span>
-        {% if item.source_recipe %}
-            <span class="recipe-tag">{{ item.source_recipe.title|truncatechars:15 }}</span>
-        {% endif %}
-    </div>
-    {% empty %}
-        <p>No items found.</p>
-    {% endfor %}
-
-    <div style="margin-top: 30px; text-align: center;">
-        <button class="btn" style="background:#f1f5f9; color:#475569; border:none; padding:10px 20px; border-radius:8px;" onclick="window.print()">
-            Print List
-        </button>
+    <h2>Current List</h2>
+    
+    <div id="items-list">
+        {% for item in items %}
+        <div class="item-row {% if item.is_purchased %}checked{% endif %}" 
+             onclick="toggleItem(this, {{ item.id }})">
+            <div class="checkbox-pill">✓</div>
+            <span class="item-name">{{ item.name }}</span>
+        </div>
+        {% endfor %}
     </div>
 </div>
+
+<script>
+function toggleItem(element, itemId) {
+    // 1. Visually toggle immediately for that "frictionless" feel
+    element.classList.toggle('checked');
+
+    // 2. Tell the server to save the change in the background
+    fetch(`/shopping/item/${itemId}/toggle/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status !== 'success') {
+            // If server fails, revert the visual change
+            element.classList.toggle('checked');
+            alert('Something went wrong saving your change.');
+        }
+    });
+}
+</script>
 {% endblock %}
