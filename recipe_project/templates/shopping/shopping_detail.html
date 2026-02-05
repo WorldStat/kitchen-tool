@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .shopping-container { max-width: 600px; margin: 0 auto; }
+    .item-row {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        background: white;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        transition: opacity 0.3s;
+        cursor: pointer;
+    }
+    
+    /* Strike-through effect when checked */
+    .item-row.checked {
+        opacity: 0.5;
+        text-decoration: line-through;
+    }
+
+    .checkbox-custom {
+        width: 22px;
+        height: 22px;
+        border: 2px solid var(--primary);
+        border-radius: 5px;
+        margin-right: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        color: white;
+    }
+
+    .checked .checkbox-custom {
+        background: var(--primary);
+    }
+    
+    .recipe-tag {
+        font-size: 0.7rem;
+        background: #f1f5f9;
+        padding: 2px 8px;
+        border-radius: 10px;
+        margin-left: auto;
+        color: #64748b;
+    }
+</style>
+
+<div class="shopping-container">
+    <div style="margin-bottom: 2rem;">
+        <a href="{% url 'recipe_list' %}" style="text-decoration:none; color:var(--primary); font-weight:600;">← Back to Cookbook</a>
+        <h2 style="margin-top:10px;">Shopping List</h2>
+        <p style="color:#666; font-size:0.9rem;">Tap items to check them off as you shop.</p>
+    </div>
+
+    {% for item in items %}
+    <div class="item-row" onclick="this.classList.toggle('checked')">
+        <div class="checkbox-custom">✓</div>
+        <span class="item-name">{{ item.name }}</span>
+        {% if item.source_recipe %}
+            <span class="recipe-tag">{{ item.source_recipe.title|truncatechars:15 }}</span>
+        {% endif %}
+    </div>
+    {% empty %}
+        <p>No items found.</p>
+    {% endfor %}
+
+    <div style="margin-top: 30px; text-align: center;">
+        <button class="btn" style="background:#f1f5f9; color:#475569; border:none; padding:10px 20px; border-radius:8px;" onclick="window.print()">
+            Print List
+        </button>
+    </div>
+</div>
+{% endblock %}

@@ -13,4 +13,5 @@ urlpatterns = [
     # App inclusions
     path('recipes/', include('recipes.urls')),
     path('users/', include('users.urls')),
+    path('shopping/', include('shopping.urls')), # Your new shopping logic
 ]

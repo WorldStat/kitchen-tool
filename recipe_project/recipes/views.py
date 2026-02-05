@@ -82,21 +82,29 @@ def delete_recipe(request, pk):
 def generate_shopping_list(request):
     if request.method == 'POST':
         recipe_ids = request.POST.getlist('selected_recipes')
+        
         if not recipe_ids:
+            messages.warning(request, "Please select at least one recipe!")
             return redirect('recipe_list')
         
-        # Create the master list
+        # 1. Create the Shopping List object
         new_list = ShoppingList.objects.create(user=request.user)
         selected_recipes = Recipe.objects.filter(id__in=recipe_ids, owner=request.user)
         
+        # 2. Add ingredients to the list
         for recipe in selected_recipes:
             new_list.recipes.add(recipe)
-            # Simple Logic: Split ingredients by line and create items
-            for line in recipe.ingredients.splitlines():
+            lines = recipe.ingredients.splitlines()
+            for line in lines:
                 if line.strip():
                     ShoppingItem.objects.create(
                         shopping_list=new_list,
                         name=line.strip(),
                         source_recipe=recipe
                     )
-        return redirect('recipe_list') # Or redirect to a new shopping_detail view
+        
+        messages.success(request, f"Shopping list created with {len(recipe_ids)} recipes!")
+        # 3. Redirect to the actual list so they see the result!
+        return redirect('shopping_list_detail', pk=new_list.pk)
+    
+    return redirect('recipe_list')
