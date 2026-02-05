@@ -6,7 +6,7 @@ urlpatterns = [
     path('list/<int:pk>/', views.shopping_list_detail, name='shopping_list_detail'),
     
     # Optional: A view to see all historical shopping lists
-    path('history/', views.shopping_list_history, name='shopping_list_history'),
+    path('history/', views.shopping_list_detail, name='shopping_list_detail'),
     
     # AJAX/API endpoint to toggle items (for a truly frictionless experience)
     path('item/<int:item_id>/toggle/', views.toggle_item, name='toggle_item'),
