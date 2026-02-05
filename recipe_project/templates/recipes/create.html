@@ -1,22 +1,153 @@
 {% extends 'base.html' %}
+
 {% block content %}
+<style>
+    /* --- PAGE SPECIFIC STYLES --- */
+    .page-header {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .page-header h2 {
+        color: var(--primary);
+        font-weight: 800;
+        font-size: 2rem;
+    }
+
+    /* --- IMPORT SECTION (The "Tool") --- */
+    .import-card {
+        background: linear-gradient(135deg, #f0f7f4 0%, #e6fcf5 100%);
+        border: 2px dashed var(--primary);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 3rem;
+        text-align: center;
+    }
+
+    .import-input-group {
+        display: flex;
+        gap: 10px;
+        max-width: 600px;
+        margin: 1.5rem auto 0.5rem;
+    }
+
+    .import-input {
+        flex-grow: 1;
+        padding: 12px 16px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.2s;
+    }
+    .import-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
+    }
+
+    /* --- MAIN FORM STYLING --- */
+    .recipe-form-card {
+        background: white;
+        /* Styling Django's default form rendering */
+    }
+
+    .recipe-form p {
+        margin-bottom: 1.5rem;
+    }
+
+    .recipe-form label {
+        display: block;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .recipe-form input[type="text"],
+    .recipe-form textarea,
+    .recipe-form select {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 1rem;
+        background: #f8fafc;
+        transition: border 0.2s;
+    }
+
+    .recipe-form input:focus,
+    .recipe-form textarea:focus {
+        background: white;
+        border-color: var(--primary);
+        outline: none;
+    }
+
+    .recipe-form textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .recipe-form .helptext {
+        display: block;
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-top: 4px;
+    }
+
+    .btn-submit {
+        background: var(--primary-grad);
+        color: white;
+        width: 100%;
+        padding: 14px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 1rem;
+        transition: transform 0.1s;
+    }
+    .btn-submit:hover {
+        opacity: 0.95;
+    }
+    .btn-submit:active {
+        transform: scale(0.98);
+    }
+
+    .btn-import {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 0 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+</style>
+
+<div class="page-header">
     <h2>Add New Recipe</h2>
+    <p style="color: #666;">Import from the web or create your own masterpiece.</p>
+</div>
 
-    <div style="background: #f0f4f8; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #d1d9e0;">
-        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Import from Website</label>
-        <form method="GET" style="display: flex; gap: 10px;">
-            <input type="url" name="import_url" placeholder="https://www.allrecipes.com/recipe/..." 
-                   style="flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
-            <button type="submit" class="btn">Import</button>
-        </form>
-        <small style="color: #666;">Paste a link to auto-fill the form below.</small>
-    </div>
-
-    <hr>
-
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn" style="width: 100%; font-size: 1.2rem;">Save to My Collection</button>
+<div class="import-card">
+    <div style="font-size: 2rem; margin-bottom: 10px;">🪄</div>
+    <h3 style="color: var(--primary);">Magic Import</h3>
+    <p style="font-size: 0.9rem; color: #555;">Paste a URL from AllRecipes, FoodNetwork, etc.</p>
+    
+    <form method="GET" class="import-input-group">
+        <input type="url" name="import_url" class="import-input" placeholder="https://..." required>
+        <button type="submit" class="btn-import">Fetch</button>
     </form>
+</div>
+
+<div class="recipe-form-card">
+    <form method="post" enctype="multipart/form-data" class="recipe-form">
+        {% csrf_token %}
+        
+        {{ form.as_p }}
+
+        <button type="submit" class="btn-submit">Save to Collection</button>
+    </form>
+</div>
 {% endblock %}

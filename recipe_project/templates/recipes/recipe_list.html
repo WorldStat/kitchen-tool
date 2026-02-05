@@ -1,11 +1,150 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-    <h2>My Recipes</h2>
-    <a href="{% url 'create_recipe' %}" class="btn">+ Add New Recipe</a>
-    <hr>
-    {% for recipe in recipes %}
-        <div><h3>{{ recipe.title }}</h3><p>{{ recipe.servings }} servings</p></div>
-    {% empty %}
-        <p>No recipes yet. Import one!</p>
-    {% endfor %}
+<style>
+    .header-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .btn-add {
+        background: var(--primary);
+        color: white;
+        text-decoration: none;
+        padding: 10px 20px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 10px rgba(45, 106, 79, 0.2);
+        transition: transform 0.2s;
+    }
+    .btn-add:hover { transform: translateY(-2px); }
+
+    /* --- GRID LAYOUT --- */
+    .recipe-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2rem;
+    }
+
+    /* --- RECIPE CARD --- */
+    .recipe-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        border: 1px solid #f1f5f9;
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .recipe-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    }
+
+    .card-img-top {
+        height: 180px;
+        width: 100%;
+        background-color: #e2e8f0;
+        object-fit: cover;
+    }
+
+    .card-placeholder {
+        height: 180px;
+        background: linear-gradient(135deg, #e2e8f0 0%, #f8fafc 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #cbd5e1;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-title {
+        font-weight: 700;
+        font-size: 1.15rem;
+        margin-bottom: 0.5rem;
+        color: var(--text);
+    }
+
+    .card-meta {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin-bottom: 1rem;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .pill {
+        background: #f1f5f9;
+        padding: 4px 10px;
+        border-radius: 20px;
+    }
+
+    /* --- EMPTY STATE --- */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 2px dashed #cbd5e1;
+    }
+</style>
+
+<div class="header-flex">
+    <h2 style="color: var(--primary); margin: 0;">My Cookbook</h2>
+    <a href="{% url 'create_recipe' %}" class="btn-add">
+        + Add Recipe
+    </a>
+</div>
+
+{% if recipes %}
+    <div class="recipe-grid">
+        {% for recipe in recipes %}
+            <div class="recipe-card">
+                {% if recipe.image %}
+                    <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}" class="card-img-top">
+                {% else %}
+                    <div class="card-placeholder">🍳</div>
+                {% endif %}
+
+                <div class="card-body">
+                    <div class="card-title">{{ recipe.title }}</div>
+                    
+                    <div class="card-meta">
+                        {% if recipe.servings %}
+                            <span class="pill">🍽 {{ recipe.servings }} Servings</span>
+                        {% endif %}
+                    </div>
+
+                    <p style="font-size: 0.9rem; color: #666; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 0;">
+                        {{ recipe.description|default:recipe.instructions|truncatewords:20 }}
+                    </p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">🥗</div>
+        <h3>No recipes yet</h3>
+        <p style="color: #666; margin-bottom: 2rem;">Your kitchen is looking a little quiet. Why not import your first meal?</p>
+        <a href="{% url 'create_recipe' %}" class="btn-add">Start Cooking</a>
+    </div>
+{% endif %}
+
 {% endblock %}
