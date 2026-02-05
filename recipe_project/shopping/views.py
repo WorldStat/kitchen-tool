@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from .models import ShoppingList
+from django.contrib.auth.decorators import login_required
 
 @login_required
 def shopping_list_detail(request, pk):
