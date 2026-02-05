@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h2>My Recipes</h2>
+    <a href="{% url 'create_recipe' %}" class="btn">+ Add New Recipe</a>
+    <hr>
+    {% for recipe in recipes %}
+        <div><h3>{{ recipe.title }}</h3><p>{{ recipe.servings }} servings</p></div>
+    {% empty %}
+        <p>No recipes yet. Import one!</p>
+    {% endfor %}
+{% endblock %}
