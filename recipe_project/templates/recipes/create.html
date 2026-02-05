@@ -1,9 +1,22 @@
 {% extends 'base.html' %}
 {% block content %}
-    <h2>Add Recipe</h2>
+    <h2>Add New Recipe</h2>
+
+    <div style="background: #f0f4f8; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #d1d9e0;">
+        <label style="font-weight: bold; display: block; margin-bottom: 5px;">Import from Website</label>
+        <form method="GET" style="display: flex; gap: 10px;">
+            <input type="url" name="import_url" placeholder="https://www.allrecipes.com/recipe/..." 
+                   style="flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+            <button type="submit" class="btn">Import</button>
+        </form>
+        <small style="color: #666;">Paste a link to auto-fill the form below.</small>
+    </div>
+
+    <hr>
+
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit" class="btn">Save Recipe</button>
+        <button type="submit" class="btn" style="width: 100%; font-size: 1.2rem;">Save to My Collection</button>
     </form>
 {% endblock %}
