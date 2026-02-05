@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 from django.contrib import messages
 from recipe_scrapers import scrape_me
+from django.shortcuts import render, redirect, get_object_or_404
 
 from .models import Recipe
 from .forms import RecipeForm
@@ -18,6 +19,12 @@ class LandingPageView(TemplateView):
 def recipe_list(request):
     recipes = Recipe.objects.filter(owner=request.user)
     return render(request, 'recipes/recipe_list.html', {'recipes': recipes})
+
+@login_required
+def recipe_detail(request, pk):
+    # Ensure users can only see their own recipes
+    recipe = get_object_or_404(Recipe, pk=pk, owner=request.user)
+    return render(request, 'recipes/recipe_detail.html', {'recipe': recipe})
 
 @login_required
 def create_recipe(request):

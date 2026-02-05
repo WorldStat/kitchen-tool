@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .recipe-hero {
+        position: relative;
+        border-radius: 20px;
+        overflow: hidden;
+        margin-bottom: 2rem;
+        height: 300px;
+        background: #e2e8f0;
+    }
+    .recipe-hero img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .back-btn {
+        position: absolute;
+        top: 20px; left: 20px;
+        background: white;
+        padding: 8px 15px;
+        border-radius: 50px;
+        text-decoration: none;
+        color: var(--text);
+        font-weight: 600;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .meta-bar {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin: 2rem 0 1rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .ingredient-list { list-style: none; padding: 0; }
+    .ingredient-list li {
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .check-box { width: 20px; height: 20px; border: 2px solid var(--primary); border-radius: 5px; }
+
+    .instructions {
+        line-height: 1.8;
+        white-space: pre-line;
+        background: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+    }
+</style>
+
+<div class="recipe-hero">
+    <a href="{% url 'recipe_list' %}" class="back-btn">⬅ Back</a>
+    {% if recipe.image %}
+        <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}">
+    {% else %}
+        <div style="display:flex; align-items:center; justify-content:center; height:100%; font-size:4rem;">🍲</div>
+    {% endif %}
+</div>
+
+<h1 style="margin-bottom: 10px;">{{ recipe.title }}</h1>
+
+<div class="meta-bar">
+    <span>👤 {{ recipe.owner.username }}</span>
+    <span>🍽 {{ recipe.servings }} Servings</span>
+    <span style="color: var(--primary); font-weight: 600;">🌿 Farmer Approved</span>
+</div>
+
+<div class="section-title"><span>🛒</span> Ingredients</div>
+<ul class="ingredient-list">
+    {% for ingredient in recipe.ingredients.splitlines %}
+        <li><div class="check-box"></div> {{ ingredient }}</li>
+    {% endfor %}
+</ul>
+
+<div class="section-title"><span>🔥</span> Instructions</div>
+<div class="instructions">
+    {{ recipe.instructions }}
+</div>
+
+<div style="margin-top: 3rem; text-align: center;">
+    <button class="btn" style="background:#e2e8f0; color:#475569; border:none; padding:12px 24px; border-radius:8px;">
+        Share with Family
+    </button>
+</div>
+{% endblock %}

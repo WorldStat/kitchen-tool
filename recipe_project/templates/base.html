@@ -2,168 +2,123 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KitchenTool</title>
     <style>
-        /* --- SHARED VARIABLES --- */
         :root {
             --primary: #2d6a4f;
-            --primary-grad: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
-            --bg-light: #f3f4f6;
+            --primary-light: #40916c;
+            --bg: #f8fafc;
             --white: #ffffff;
-            --text: #1f2937;
-            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+            --text: #1e293b;
         }
 
         body { 
-            font-family: 'Inter', system-ui, sans-serif; 
-            background: var(--bg-light); 
-            margin: 0;
-            color: var(--text);
-            padding-top: 80px; /* Space for fixed header */
+            font-family: 'Inter', -apple-system, sans-serif; 
+            background: var(--bg); 
+            margin: 0; padding-bottom: 70px; /* Space for mobile nav */
         }
 
-        /* --- APP NAVBAR (Always Solid) --- */
-        .navbar {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            height: 70px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 5%;
-            z-index: 1000;
-            background: var(--primary-grad); /* Always colored */
-            box-shadow: var(--shadow);
-            color: white;
-        }
-
-        .logo {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: white;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-menu {
-            display: flex;
-            gap: 1.5rem;
-            align-items: center;
-        }
-
-        .nav-link {
-            color: rgba(255,255,255,0.9);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-        .nav-link:hover { color: white; }
-
-        .btn-logout {
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        .btn-logout:hover { background: rgba(255,255,255,0.3); }
-
-        /* Hamburger (Hidden on desktop) */
-        .hamburger { display: none; cursor: pointer; flex-direction: column; gap: 5px; }
-        .bar { width: 25px; height: 3px; background: white; border-radius: 2px; }
-
-        /* --- MOBILE RESPONSIVENESS --- */
-        @media (max-width: 768px) {
-            .hamburger { display: flex; }
-            
-            .nav-menu {
-                position: absolute;
-                top: 70px;
-                left: 0;
-                width: 100%;
-                background: var(--primary); /* Solid match */
-                flex-direction: column;
-                padding: 2rem;
-                gap: 2rem;
-                transform: translateY(-200%);
-                transition: transform 0.3s;
-                border-top: 1px solid rgba(255,255,255,0.1);
-            }
-            
-            .nav-menu.active { transform: translateY(0); }
-        }
-
-        /* --- MAIN CONTAINER --- */
-        .container {
-            max-width: 900px;
-            margin: 0 auto 2rem;
+        /* --- DESKTOP NAV --- */
+        .top-nav {
             background: var(--white);
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: var(--shadow);
-            min-height: 60vh;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10%;
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo { font-weight: 800; color: var(--primary); text-decoration: none; font-size: 1.2rem; }
+
+        /* --- MOBILE BOTTOM NAV --- */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: var(--white);
+            height: 65px;
+            border-top: 1px solid #e2e8f0;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .nav-item {
+            text-decoration: none;
+            color: #64748b;
+            font-size: 0.7rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-item.active { color: var(--primary); font-weight: 600; }
+        .nav-icon { font-size: 1.4rem; }
+
+        @media (max-width: 768px) {
+            .top-nav .nav-links { display: none; }
+            .mobile-nav { display: flex; }
+            .container { padding: 15px; margin-top: 10px; }
+        }
+
+        .container { max-width: 1000px; margin: 20px auto; padding: 0 20px; }
+        
+        .btn-circle {
+            background: var(--primary);
+            color: white;
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(45, 106, 79, 0.4);
+            margin-top: -30px; /* Floating effect */
+            border: 4px solid var(--white);
         }
     </style>
 </head>
 <body>
 
-    <nav class="navbar">
-        <a href="{% url 'landing_page' %}" class="logo">
-            <span>🥗</span> KitchenTool
-        </a>
-
-        <div class="hamburger" id="hamburger">
-            <span class="bar"></span>
-            <span class="bar"></span>
-            <span class="bar"></span>
-        </div>
-
-        <div class="nav-menu" id="nav-menu">
+    <nav class="top-nav">
+        <a href="{% url 'landing_page' %}" class="logo">🥗 KitchenTool</a>
+        <div class="nav-links">
             {% if user.is_authenticated %}
-                <a href="{% url 'landing_page' %}" class="nav-link">Home</a>
-                <a href="{% url 'recipe_list' %}" class="nav-link">My Recipes</a>
-                <a href="#" class="nav-link">Grocery List</a>
-                
-                <form action="{% url 'logout' %}" method="post" style="margin:0;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-logout">Sign Out</button>
+                <a href="{% url 'recipe_list' %}" style="margin-right:20px; text-decoration:none; color:var(--text);">My Collection</a>
+                <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}<button type="submit" style="background:none; border:none; color:red; cursor:pointer;">Logout</button>
                 </form>
-            {% else %}
-                <a href="{% url 'landing_page' %}" class="nav-link">Home</a>
-                <a href="{% url 'login' %}" class="nav-link">Login</a>
-                <a href="{% url 'register' %}" class="btn-logout">Register</a>
             {% endif %}
         </div>
     </nav>
 
     <div class="container">
-        {% if messages %}
-            {% for m in messages %}
-                <div style="background: #e6fffa; color: #2d6a4f; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
-                    {{ m }}
-                </div>
-            {% endfor %}
-        {% endif %}
-
         {% block content %}{% endblock %}
     </div>
 
-    <script>
-        // Simple toggle for mobile menu
-        const hamburger = document.getElementById('hamburger');
-        const navMenu = document.getElementById('nav-menu');
-
-        hamburger.addEventListener('click', () => {
-            navMenu.classList.toggle('active');
-        });
-    </script>
+    {% if user.is_authenticated %}
+    <div class="mobile-nav">
+        <a href="{% url 'recipe_list' %}" class="nav-item">
+            <span class="nav-icon">📖</span>
+            <span>Recipes</span>
+        </a>
+        <a href="{% url 'create_recipe' %}" class="nav-item">
+            <div class="btn-circle">➕</div>
+            <span style="margin-top: 5px;">Add</span>
+        </a>
+        <a href="#" class="nav-item">
+            <span class="nav-icon">🛒</span>
+            <span>List</span>
+        </a>
+    </div>
+    {% endif %}
 
 </body>
 </html>

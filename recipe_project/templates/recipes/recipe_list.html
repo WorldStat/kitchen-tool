@@ -124,7 +124,10 @@
 
                 <div class="card-body">
                     <div class="card-title">{{ recipe.title }}</div>
-                    
+                    <a href="{% url 'recipe_detail' recipe.pk %}" style="text-decoration: none; color: inherit;">
+                        <div class="recipe-card">
+                            </div>
+                    </a>
                     <div class="card-meta">
                         {% if recipe.servings %}
                             <span class="pill">🍽 {{ recipe.servings }} Servings</span>
