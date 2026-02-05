@@ -4,7 +4,8 @@ from django.views.generic import TemplateView
 from django.contrib import messages
 from recipe_scrapers import scrape_me
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import ShoppingList, ShoppingItem
+from .models import Recipe  # Local to recipes app
+from shopping.models import ShoppingList, ShoppingItem  # Pulling from shopping app
 
 from .models import Recipe
 from .forms import RecipeForm
