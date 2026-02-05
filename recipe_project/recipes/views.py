@@ -4,6 +4,7 @@ from django.views.generic import TemplateView
 from django.contrib import messages
 from recipe_scrapers import scrape_me
 from django.shortcuts import render, redirect, get_object_or_404
+from .models import ShoppingList, ShoppingItem
 
 from .models import Recipe
 from .forms import RecipeForm
@@ -56,3 +57,45 @@ def create_recipe(request):
     else:
         form = RecipeForm(initial=initial_data)
     return render(request, 'recipes/create.html', {'form': form})
+
+@login_required
+def edit_recipe(request, pk):
+    recipe = get_object_or_404(Recipe, pk=pk, owner=request.user)
+    if request.method == 'POST':
+        form = RecipeForm(request.POST, request.FILES, instance=recipe)
+        if form.is_valid():
+            form.save()
+            return redirect('recipe_detail', pk=recipe.pk)
+    else:
+        form = RecipeForm(instance=recipe)
+    return render(request, 'recipes/create.html', {'form': form, 'edit_mode': True})
+
+@login_required
+def delete_recipe(request, pk):
+    recipe = get_object_or_404(Recipe, pk=pk, owner=request.user)
+    if request.method == 'POST':
+        recipe.delete()
+    return redirect('recipe_list')
+
+@login_required
+def generate_shopping_list(request):
+    if request.method == 'POST':
+        recipe_ids = request.POST.getlist('selected_recipes')
+        if not recipe_ids:
+            return redirect('recipe_list')
+        
+        # Create the master list
+        new_list = ShoppingList.objects.create(user=request.user)
+        selected_recipes = Recipe.objects.filter(id__in=recipe_ids, owner=request.user)
+        
+        for recipe in selected_recipes:
+            new_list.recipes.add(recipe)
+            # Simple Logic: Split ingredients by line and create items
+            for line in recipe.ingredients.splitlines():
+                if line.strip():
+                    ShoppingItem.objects.create(
+                        shopping_list=new_list,
+                        name=line.strip(),
+                        source_recipe=recipe
+                    )
+        return redirect('recipe_list') # Or redirect to a new shopping_detail view
