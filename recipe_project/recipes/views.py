@@ -84,27 +84,31 @@ def generate_shopping_list(request):
         recipe_ids = request.POST.getlist('selected_recipes')
         
         if not recipe_ids:
-            messages.warning(request, "Please select at least one recipe!")
+            messages.error(request, "No recipes were selected. Please check at least one box!")
             return redirect('recipe_list')
         
-        # 1. Create the Shopping List object
-        new_list = ShoppingList.objects.create(user=request.user)
-        selected_recipes = Recipe.objects.filter(id__in=recipe_ids, owner=request.user)
-        
-        # 2. Add ingredients to the list
-        for recipe in selected_recipes:
-            new_list.recipes.add(recipe)
-            lines = recipe.ingredients.splitlines()
-            for line in lines:
-                if line.strip():
-                    ShoppingItem.objects.create(
-                        shopping_list=new_list,
-                        name=line.strip(),
-                        source_recipe=recipe
-                    )
-        
-        messages.success(request, f"Shopping list created with {len(recipe_ids)} recipes!")
-        # 3. Redirect to the actual list so they see the result!
-        return redirect('shopping_list_detail', pk=new_list.pk)
-    
+        try:
+            # 1. Create the master list
+            new_list = ShoppingList.objects.create(user=request.user)
+            selected_recipes = Recipe.objects.filter(id__in=recipe_ids, owner=request.user)
+            
+            # 2. Extract ingredients and save as items
+            for recipe in selected_recipes:
+                new_list.recipes.add(recipe)
+                for line in recipe.ingredients.splitlines():
+                    if line.strip():
+                        ShoppingItem.objects.create(
+                            shopping_list=new_list,
+                            name=line.strip(),
+                            source_recipe=recipe
+                        )
+            
+            messages.success(request, f"Generated list for {selected_recipes.count()} recipes!")
+            # IMPORTANT: Redirect to the NEW list immediately
+            return redirect('shopping_list_detail', pk=new_list.pk)
+            
+        except Exception as e:
+            messages.error(request, f"Error generating list: {str(e)}")
+            return redirect('recipe_list')
+
     return redirect('recipe_list')

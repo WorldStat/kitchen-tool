@@ -2,71 +2,69 @@
 
 {% block content %}
 <style>
-    .header-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    
     .recipe-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         gap: 20px;
-        padding-bottom: 100px; /* Space for floating bar */
+        margin-top: 20px;
     }
 
-    /* Selection Logic */
     .card-container { position: relative; }
+
     .select-checkbox {
         position: absolute;
         top: 15px; left: 15px;
         z-index: 10;
-        width: 24px; height: 24px;
+        width: 26px; height: 26px;
         accent-color: var(--primary);
         cursor: pointer;
     }
 
     .recipe-card {
         background: white;
-        border-radius: 15px;
+        border-radius: 16px;
         overflow: hidden;
         border: 2px solid transparent;
-        transition: all 0.2s;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: var(--shadow);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
     }
 
-    /* Highlight card when checkbox is checked */
     .card-container:has(.select-checkbox:checked) .recipe-card {
         border-color: var(--primary);
         background: #f0fdf4;
+        transform: scale(0.98);
     }
 
-    .card-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        padding: 10px 15px;
-        background: #f8fafc;
-        border-top: 1px solid #eee;
-    }
+    .card-img { height: 160px; background: #e2e8f0; overflow: hidden; }
+    .card-img img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .card-body { padding: 15px; flex-grow: 1; }
+    .card-title { font-weight: 700; margin-bottom: 5px; font-size: 1.1rem; }
 
-    .action-link { font-size: 0.8rem; text-decoration: none; color: #64748b; font-weight: 600; }
-    .action-link:hover { color: var(--primary); }
+    .card-footer { padding: 10px 15px; background: #f8fafc; display: flex; justify-content: space-between; }
+    .action-btn { font-size: 0.8rem; color: #64748b; text-decoration: none; font-weight: 600; }
 
-    /* FLOATING ACTION BAR */
+    /* FLOATING BAR */
     .shopping-bar {
         position: fixed;
-        bottom: 80px; /* Above mobile nav */
+        bottom: 85px;
         left: 50%;
-        transform: translateX(-50%) translateY(150%);
+        transform: translateX(-50%) translateY(200%);
         background: var(--primary);
         color: white;
-        padding: 15px 30px;
+        padding: 12px 25px;
         border-radius: 50px;
         display: flex;
         align-items: center;
         gap: 20px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        z-index: 1001;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        z-index: 1500;
         width: 90%;
-        max-width: 500px;
+        max-width: 450px;
     }
 
     .shopping-bar.active { transform: translateX(-50%) translateY(0); }
@@ -75,16 +73,16 @@
         background: white;
         color: var(--primary);
         border: none;
-        padding: 8px 18px;
-        border-radius: 20px;
+        padding: 10px 20px;
+        border-radius: 25px;
         font-weight: 800;
         cursor: pointer;
     }
 </style>
 
-<div class="header-area">
-    <h2>{{ user.username }}'s Kitchen</h2>
-    <a href="{% url 'create_recipe' %}" class="btn" style="background:var(--primary); color:white; padding:8px 15px; border-radius:8px; text-decoration:none;">+ New</a>
+<div style="display: flex; justify-content: space-between; align-items: center;">
+    <h2>My Cookbook</h2>
+    <p style="color: #64748b; font-size: 0.9rem;">Select recipes to shop</p>
 </div>
 
 <form id="shopping-form" method="POST" action="{% url 'generate_shopping_list' %}">
@@ -97,46 +95,45 @@
             
             <div class="recipe-card">
                 <a href="{% url 'recipe_detail' recipe.pk %}" style="text-decoration:none; color:inherit;">
-                    <div style="height:160px; background:#e2e8f0;">
-                        {% if recipe.image %}<img src="{{ recipe.image.url }}" style="width:100%; height:100%; object-fit:cover;">{% endif %}
+                    <div class="card-img">
+                        {% if recipe.image %}<img src="{{ recipe.image.url }}">{% else %}<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:3rem;">🍲</div>{% endif %}
                     </div>
-                    <div style="padding:15px;">
-                        <h3 style="margin:0; font-size:1.1rem;">{{ recipe.title }}</h3>
-                        <small style="color:#666;">{{ recipe.servings }} Servings</small>
+                    <div class="card-body">
+                        <div class="card-title">{{ recipe.title }}</div>
+                        <small>{{ recipe.servings }} Servings</small>
                     </div>
                 </a>
-                
-                <div class="card-actions">
-                    <a href="{% url 'edit_recipe' recipe.pk %}" class="action-link">Edit</a>
-                    <form action="{% url 'delete_recipe' recipe.pk %}" method="POST" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="action-link" style="border:none; background:none; cursor:pointer;" onclick="return confirm('Delete this recipe?')">Delete</button>
-                    </form>
+                <div class="card-footer">
+                    <a href="{% url 'edit_recipe' recipe.pk %}" class="action-btn">Edit</a>
                 </div>
             </div>
+        </div>
+        {% empty %}
+        <div style="grid-column: 1/-1; text-align: center; padding: 50px;">
+            <h3>No recipes yet!</h3>
+            <a href="{% url 'create_recipe' %}" class="btn-generate" style="background:var(--primary); color:white; text-decoration:none;">Add First Recipe</a>
         </div>
         {% endfor %}
     </div>
 
     <div id="shopping-bar" class="shopping-bar">
-        <span id="selection-count">0 recipes selected</span>
+        <span id="selection-count" style="font-weight: 600;">0 selected</span>
         <button type="submit" class="btn-generate">Generate Shopping List</button>
     </div>
 </form>
 
 <script>
     function toggleBar() {
-        const checkboxes = document.querySelectorAll('.select-checkbox:checked');
+        const checked = document.querySelectorAll('.select-checkbox:checked');
         const bar = document.getElementById('shopping-bar');
-        const countText = document.getElementById('selection-count');
+        const count = document.getElementById('selection-count');
         
-        if (checkboxes.length > 0) {
+        if (checked.length > 0) {
             bar.classList.add('active');
-            countText.innerText = `${checkboxes.length} recipe${checkboxes.length > 1 ? 's' : ''} selected`;
+            count.innerText = `${checked.length} recipe${checked.length > 1 ? 's' : ''} selected`;
         } else {
             bar.classList.remove('active');
         }
     }
 </script>
-
 {% endblock %}

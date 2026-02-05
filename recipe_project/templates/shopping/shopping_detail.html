@@ -2,22 +2,22 @@
 
 {% block content %}
 <style>
-    .shopping-container { max-width: 600px; margin: 0 auto; padding-bottom: 80px; }
+    .item-list { margin-top: 20px; }
     .item-row {
-        display: flex;
-        align-items: center;
-        padding: 15px;
         background: white;
+        padding: 16px;
         border-radius: 12px;
         margin-bottom: 10px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
         cursor: pointer;
         transition: all 0.2s;
     }
     .item-row.checked { opacity: 0.5; }
     .item-row.checked .item-name { text-decoration: line-through; color: #94a3b8; }
 
-    .checkbox-pill {
+    .checkbox {
         width: 24px; height: 24px;
         border: 2px solid var(--primary);
         border-radius: 6px;
@@ -25,43 +25,30 @@
         display: flex; align-items: center; justify-content: center;
         color: white; font-weight: bold;
     }
-    .checked .checkbox-pill { background: var(--primary); }
+    .checked .checkbox { background: var(--primary); }
 </style>
 
-<div class="shopping-container">
-    <h2>Current List</h2>
-    
-    <div id="items-list">
-        {% for item in items %}
-        <div class="item-row {% if item.is_purchased %}checked{% endif %}" 
-             onclick="toggleItem(this, {{ item.id }})">
-            <div class="checkbox-pill">✓</div>
-            <span class="item-name">{{ item.name }}</span>
-        </div>
-        {% endfor %}
+<div style="margin-bottom: 25px;">
+    <a href="{% url 'shopping_list_history' %}" style="text-decoration:none; color:var(--primary);">← Back to History</a>
+    <h2 style="margin-top:10px;">Shopping Checklist</h2>
+</div>
+
+<div class="item-list">
+    {% for item in items %}
+    <div class="item-row {% if item.is_purchased %}checked{% endif %}" 
+         onclick="toggleItem(this, {{ item.id }})">
+        <div class="checkbox">✓</div>
+        <span class="item-name">{{ item.name }}</span>
     </div>
+    {% endfor %}
 </div>
 
 <script>
-function toggleItem(element, itemId) {
-    // 1. Visually toggle immediately for that "frictionless" feel
-    element.classList.toggle('checked');
-
-    // 2. Tell the server to save the change in the background
-    fetch(`/shopping/item/${itemId}/toggle/`, {
+function toggleItem(el, id) {
+    el.classList.toggle('checked');
+    fetch(`/shopping/item/${id}/toggle/`, {
         method: 'POST',
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}',
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status !== 'success') {
-            // If server fails, revert the visual change
-            element.classList.toggle('checked');
-            alert('Something went wrong saving your change.');
-        }
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
     });
 }
 </script>

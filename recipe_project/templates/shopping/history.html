@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .list-card {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-decoration: none;
+        color: inherit;
+        box-shadow: var(--shadow);
+    }
+    .list-card:hover { border-left: 5px solid var(--primary); }
+</style>
+
+<h2>Shopping History</h2>
+
+{% if user_lists %}
+    {% for list in user_lists %}
+    <a href="{% url 'shopping_list_detail' list.pk %}" class="list-card">
+        <div>
+            <div style="font-weight: 700; font-size: 1.1rem;">List for {{ list.created_at|date:"F j, Y" }}</div>
+            <small style="color: #64748b;">{{ list.items.count }} items from {{ list.recipes.count }} recipes</small>
+        </div>
+        <div style="color: var(--primary); font-size: 1.5rem;">→</div>
+    </a>
+    {% endfor %}
+{% else %}
+    <div style="text-align: center; padding: 100px 0;">
+        <p>You haven't generated any lists yet.</p>
+        <a href="{% url 'recipe_list' %}" class="nav-link" style="color:var(--primary); font-weight:700;">Go select some recipes!</a>
+    </div>
+{% endif %}
+{% endblock %}
