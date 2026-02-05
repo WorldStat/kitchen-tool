@@ -6,296 +6,296 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KitchenTool | Master Your Meals</title>
     <style>
-        /* --- ENTERPRISE DESIGN TOKENS --- */
+        /* --- DESIGN TOKENS --- */
         :root {
-            --primary: #2d6a4f;       /* Sage Green */
-            --primary-dark: #1b4332;  /* Deep Forest */
-            --accent: #d8f3dc;        /* Mint Wash */
-            --action: #e63946;        /* Alert/Action Red */
-            --text-main: #1f2937;     /* Dark Slate */
-            --text-muted: #6b7280;    /* Muted Grey */
-            --bg-light: #f9fafb;      /* Off White */
+            --primary: #2d6a4f;
+            --primary-grad: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
+            --accent: #d8f3dc;
+            --text-dark: #1f2937;
             --white: #ffffff;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --glass: rgba(255, 255, 255, 0.95);
+            --nav-height: 70px;
+            --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
 
-        /* --- GLOBAL RESET --- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: var(--font-main);
-            color: var(--text-main);
+            color: var(--text-dark);
             background-color: var(--white);
-            line-height: 1.6;
             overflow-x: hidden;
         }
 
-        h1, h2, h3 { line-height: 1.2; font-weight: 800; color: var(--primary-dark); }
-        p { color: var(--text-muted); font-size: 1.1rem; }
-
-        /* --- SCROLL ANIMATION UTILS --- */
-        .reveal {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: var(--transition);
-            transition-duration: 0.8s;
-        }
-        .reveal.active {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* --- LAYOUT COMPONENTS --- */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-            position: relative;
-            z-index: 2;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            padding: 12px 32px;
-            border-radius: 8px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: var(--transition);
-            cursor: pointer;
-            border: none;
-        }
-
-        .btn-primary {
-            background-color: var(--primary);
-            color: var(--white);
-            box-shadow: var(--shadow-sm);
-        }
-        .btn-primary:hover { background-color: var(--primary-dark); transform: translateY(-2px); }
-
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--primary);
-            color: var(--primary);
-            margin-left: 1rem;
-        }
-        .btn-outline:hover { background: var(--accent); }
-
-        /* --- HERO SECTION --- */
-        header.hero {
-            height: 90vh; /* Full viewport height */
-            display: flex;
-            align-items: center;
-            background: radial-gradient(circle at top right, var(--accent) 0%, transparent 40%),
-                        linear-gradient(to bottom, #fff 0%, #f8fafc 100%);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero-content { max-width: 700px; }
-        .hero h1 { font-size: 3.5rem; letter-spacing: -0.02em; margin-bottom: 1.5rem; }
-        
-        /* Floating Background Elements */
-        .floating-bg {
-            position: absolute;
-            width: 100%; height: 100%; top: 0; left: 0;
-            pointer-events: none;
-            z-index: 1;
-        }
-        .float-item {
-            position: absolute;
-            opacity: 0.1;
-            font-size: 1.5rem;
-            animation: floatUp 15s linear infinite;
-        }
-        @keyframes floatUp {
-            from { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-            50% { opacity: 0.2; }
-            to { transform: translateY(-20vh) rotate(20deg); opacity: 0; }
-        }
-
-        /* --- SECTIONS --- */
-        section { padding: 100px 0; border-bottom: 1px solid #f1f5f9; }
-
-        /* Grid Layouts */
-        .grid-3 {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 3rem;
-            margin-top: 4rem;
-        }
-
-        .card {
-            background: var(--white);
-            padding: 2.5rem;
-            border-radius: 16px;
-            box-shadow: var(--shadow-lg);
-            border: 1px solid rgba(0,0,0,0.05);
-            transition: var(--transition);
-        }
-        .card:hover { transform: translateY(-5px); border-color: var(--primary); }
-
-        .icon-box {
-            width: 50px; height: 50px;
-            background: var(--accent);
-            color: var(--primary);
-            border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        /* --- FEATURE: FARMER DEMAND --- */
-        .farmer-section { background: var(--primary-dark); color: white; }
-        .farmer-section h2, .farmer-section p { color: white; }
-        .farmer-section p { opacity: 0.9; }
-        
-        .demand-graphic {
+        /* --- DYNAMIC NAVIGATION --- */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: var(--nav-height);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 3rem;
-            flex-wrap: wrap;
+            padding: 0 5%;
+            z-index: 1000;
+            transition: all 0.4s ease;
+            background: transparent; /* Starts transparent */
         }
-        .demand-step { text-align: center; flex: 1; min-width: 200px; padding: 20px; }
-        .demand-arrow { font-size: 2rem; color: var(--accent); opacity: 0.5; }
 
-        /* --- FOOTER --- */
-        footer { padding: 3rem 0; text-align: center; background: #fff; font-size: 0.9rem; color: var(--text-muted); }
+        /* State when scrolling down */
+        .navbar.scrolled {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow);
+            height: 60px; /* Shrinks slightly */
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Desktop Menu */
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 500;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: var(--primary);
+            transition: width 0.3s;
+        }
+
+        .nav-link:hover { color: var(--primary); }
+        .nav-link:hover::after { width: 100%; }
+
+        /* Mobile Hamburger */
+        .hamburger {
+            display: none;
+            cursor: pointer;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .bar {
+            width: 25px;
+            height: 3px;
+            background-color: var(--primary);
+            transition: 0.3s;
+            border-radius: 2px;
+        }
+
+        /* Mobile Styles */
+        @media (max-width: 768px) {
+            .hamburger { display: flex; }
+            
+            .nav-menu {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: var(--white);
+                flex-direction: column;
+                padding: 2rem 0;
+                gap: 1.5rem;
+                transform: translateY(-150%);
+                transition: transform 0.4s ease-in-out;
+                box-shadow: var(--shadow);
+                z-index: 999;
+            }
+
+            .nav-menu.active {
+                transform: translateY(0);
+            }
+        }
+
+        /* --- HERO SECTION --- */
+        header.hero {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            /* Dynamic Gradient */
+            background: radial-gradient(circle at 10% 20%, rgb(233, 252, 238) 0%, rgb(255, 255, 255) 90%);
+            padding-top: var(--nav-height);
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            color: var(--primary);
+            margin-bottom: 1rem;
+            line-height: 1.1;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #555;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        /* --- BUTTONS --- */
+        .btn {
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.1s;
+            display: inline-block;
+        }
+        .btn:active { transform: scale(0.95); }
+
+        .btn-primary {
+            background: var(--primary-grad);
+            color: var(--white);
+            box-shadow: 0 4px 15px rgba(45, 106, 79, 0.3);
+        }
+        
+        .btn-outline {
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            margin-left: 10px;
+        }
+
+        /* --- SECTION STYLES --- */
+        section { padding: 80px 20px; text-align: center; }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1100px;
+            margin: 3rem auto 0;
+        }
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+        .card:hover { transform: translateY(-5px); }
 
     </style>
 </head>
 <body>
 
+    <nav class="navbar" id="navbar">
+        <a href="{% url 'landing_page' %}" class="logo">
+            <span>🥗</span> KitchenTool
+        </a>
+        
+        <div class="hamburger" id="hamburger">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </div>
+
+        <div class="nav-menu" id="nav-menu">
+            <a href="#features" class="nav-link">Features</a>
+            <a href="#community" class="nav-link">Farmers</a>
+            
+            <a href="{% url 'login' %}" class="nav-link">Sign In</a>
+            <a href="{% url 'register' %}" class="btn btn-primary" style="margin-left: 10px; color: white;">Get Started</a>
+        </div>
+    </nav>
+
     <header class="hero">
-        <div class="floating-bg" id="bg-anim">
-            </div>
-        <div class="container hero-content reveal">
-            <h1>Master your kitchen.<br>Empower your community.</h1>
-            <p>
-                Professional-grade meal planning, automated grocery lists, and instant recipe scraping. 
-                We aggregate local demand to help farmers grow exactly what you need.
+        <div class="container">
+            <h1>Cook Smarter,<br>Not Harder.</h1>
+            <p class="subtitle">
+                The all-in-one kitchen operating system. Save recipes, auto-generate shopping lists, and help local farmers grow what you actually eat.
             </p>
-            <div style="margin-top: 2rem;">
-                <a href="{% url 'register' %}" class="btn btn-primary">Start Planning Free</a>
-                <a href="{% url 'login' %}" class="btn btn-outline">Member Login</a>
+            <div>
+                <a href="{% url 'register' %}" class="btn btn-primary">Start for Free</a>
+                <a href="#features" class="btn btn-outline">Learn More</a>
             </div>
         </div>
     </header>
 
     <section id="features">
-        <div class="container">
-            <div style="text-align: center; max-width: 800px; margin: 0 auto;">
-                <h2 class="reveal">Built for the Modern Home Cook</h2>
-                <p class="reveal">Efficiency isn't just for restaurants. Bring enterprise logic to your home kitchen.</p>
+        <h2>Why KitchenTool?</h2>
+        <div class="feature-grid">
+            <div class="card">
+                <h3>⚡ Batch Prep</h3>
+                <p>Combine ingredients across recipes. Prep once on Sunday, eat all week.</p>
             </div>
-
-            <div class="grid-3">
-                <div class="card reveal">
-                    <div class="icon-box">🔪</div>
-                    <h3>Smart Prep & Batching</h3>
-                    <p>Our algorithms scan your weekly plan and group ingredients. Chop onions once for three different meals. Save hours every Sunday.</p>
-                </div>
-
-                <div class="card reveal" style="transition-delay: 100ms;">
-                    <div class="icon-box">🤝</div>
-                    <h3>Family Sync & Sharing</h3>
-                    <p>One account for the whole house. Share shopping lists in real-time. Delegate tasks: "You buy, I prep, we cook."</p>
-                </div>
-
-                <div class="card reveal" style="transition-delay: 200ms;">
-                    <div class="icon-box">💰</div>
-                    <h3>Zero-Waste Savings</h3>
-                    <p>We track pantry inventory against recipes. Stop buying cumin when you have three jars. Users save an average of $150/mo.</p>
-                </div>
+            <div class="card">
+                <h3>🚜 Local Loop</h3>
+                <p>We share aggregate demand data with local farmers so they grow what you need.</p>
+            </div>
+            <div class="card">
+                <h3>👨‍👩‍👧‍👦 Easy Share</h3>
+                <p>Sync shopping lists with your spouse or roommates instantly.</p>
             </div>
         </div>
     </section>
 
-    <section class="farmer-section">
-        <div class="container">
-            <div class="reveal">
-                <h2>The Data-Driven Food Cycle</h2>
-                <p>Most food waste happens because farmers don't know what you want to cook. We fix that.</p>
-            </div>
-
-            <div class="demand-graphic reveal">
-                <div class="demand-step">
-                    <div class="icon-box" style="margin: 0 auto 1rem; background: rgba(255,255,255,0.1); color: #fff;">📅</div>
-                    <h4>1. You Plan</h4>
-                    <p style="font-size: 0.9rem;">You plan a week of Tomato Basil Soup.</p>
-                </div>
-                <div class="demand-arrow">➝</div>
-                <div class="demand-step">
-                    <div class="icon-box" style="margin: 0 auto 1rem; background: rgba(255,255,255,0.1); color: #fff;">📊</div>
-                    <h4>2. We Aggregate</h4>
-                    <p style="font-size: 0.9rem;">We anonymize data: "500 families need Basil."</p>
-                </div>
-                <div class="demand-arrow">➝</div>
-                <div class="demand-step">
-                    <div class="icon-box" style="margin: 0 auto 1rem; background: rgba(255,255,255,0.1); color: #fff;">🚜</div>
-                    <h4>3. Farmers Grow</h4>
-                    <p style="font-size: 0.9rem;">Local growers supply exactly what is demanded.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <footer>
-        <div class="container">
-            <p>&copy; {% now "Y" %} KitchenTool Inc. | <a href="#" style="color: inherit;">Privacy</a> | <a href="#" style="color: inherit;">Farmers Portal</a></p>
-        </div>
+    <footer style="background: var(--primary); color: white; padding: 40px; text-align: center; margin-top: 50px;">
+        <p>&copy; {% now "Y" %} KitchenTool. Made with care.</p>
     </footer>
 
     <script>
-        // 1. SCROLL REVEAL ANIMATION
-        // Uses IntersectionObserver for high-performance scroll detection
-        const revealCallback = (entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                    observer.unobserve(entry.target); // Only animate once
-                }
-            });
-        };
+        // 1. MOBILE MENU TOGGLE
+        const hamburger = document.getElementById('hamburger');
+        const navMenu = document.getElementById('nav-menu');
 
-        const revealOptions = {
-            threshold: 0.15, // Trigger when 15% visible
-            rootMargin: "0px 0px -50px 0px"
-        };
-
-        const revealObserver = new IntersectionObserver(revealCallback, revealOptions);
-        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
-
-
-        // 2. BACKGROUND INGREDIENT FLOATER
-        // Subtle visual cue for food/ingredients
-        const ingredients = ['🍅', '🥦', '🥕', '🥩', '🥚', '🧀', '🥬', '🧅'];
-        const container = document.getElementById('bg-anim');
-        
-        function spawnIngredient() {
-            const el = document.createElement('div');
-            el.innerText = ingredients[Math.floor(Math.random() * ingredients.length)];
-            el.classList.add('float-item');
+        hamburger.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
             
-            // Randomize position and animation speed
-            el.style.left = Math.random() * 100 + '%';
-            el.style.animationDuration = (10 + Math.random() * 10) + 's';
-            el.style.fontSize = (1 + Math.random() * 2) + 'rem';
-            
-            container.appendChild(el);
+            // Animate hamburger bars to X shape (Optional polish)
+            const bars = document.querySelectorAll('.bar');
+            if(navMenu.classList.contains('active')){
+                bars[0].style.transform = 'rotate(45deg) translate(5px, 6px)';
+                bars[1].style.opacity = '0';
+                bars[2].style.transform = 'rotate(-45deg) translate(5px, -6px)';
+            } else {
+                bars[0].style.transform = 'none';
+                bars[1].style.opacity = '1';
+                bars[2].style.transform = 'none';
+            }
+        });
 
-            // Cleanup after animation prevents memory leak
-            setTimeout(() => { el.remove(); }, 20000);
-        }
+        // Close menu when clicking a link
+        document.querySelectorAll('.nav-link').forEach(n => n.addEventListener('click', () => {
+            navMenu.classList.remove('active');
+            // Reset hamburger
+            const bars = document.querySelectorAll('.bar');
+            bars[0].style.transform = 'none';
+            bars[1].style.opacity = '1';
+            bars[2].style.transform = 'none';
+        }));
 
-        // Spawn initially and then periodically
-        for(let i=0; i<10; i++) spawnIngredient();
-        setInterval(spawnIngredient, 2000);
-
+        // 2. SCROLL EFFECT
+        // Adds background color when user scrolls down
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
     </script>
 </body>
 </html>
