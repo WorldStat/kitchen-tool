@@ -1,50 +1,94 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container">
+<div class="container pb-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="fw-bold">My Cookbook</h2>
-        <span class="text-muted small">{{ recipes.count }} recipes</span>
+        <span class="badge bg-secondary rounded-pill">{{ recipes.count }}</span>
     </div>
 
     {% if not recipes %}
         <div class="text-center py-5 border rounded bg-white shadow-sm">
-            <p class="text-muted">No recipes found. Import one!</p>
-            <a href="{% url 'create_recipe' %}" class="btn btn-success">Import Recipe</a>
+            <p class="text-muted">No recipes found.</p>
+            <a href="{% url 'create_recipe' %}" class="btn btn-success">Add One</a>
         </div>
     {% else %}
-        <form method="POST" action="{% url 'generate_shopping_list' %}">
+        <form method="POST" action="{% url 'generate_shopping_list' %}" id="shopping-form">
             {% csrf_token %}
             
             <div class="row row-cols-1 row-cols-md-2 g-3">
                 {% for recipe in recipes %}
                 <div class="col">
-                    <div class="card shadow-sm border-0 h-100">
-                        <div class="card-body d-flex align-items-center">
-                            <div class="me-3">
-                                <input class="form-check-input border-success" type="checkbox" name="selected_recipes" value="{{ recipe.id }}" style="transform: scale(1.5);">
+                    <div class="card shadow-sm border-0 h-100 position-relative">
+                        <div class="card-body d-flex align-items-center p-2">
+                            
+                            <div class="px-3 border-end">
+                                <input class="form-check-input border-success" 
+                                       type="checkbox" 
+                                       name="selected_recipes" 
+                                       value="{{ recipe.id }}" 
+                                       style="width: 1.5rem; height: 1.5rem;">
                             </div>
                             
-                            <div class="flex-grow-1">
-                                <h6 class="mb-0 fw-bold">{{ recipe.title }}</h6>
-                                <small class="text-muted">{{ recipe.servings }} servings</small>
-                            </div>
-                            
-                            {% if recipe.image %}
-                                <img src="{{ recipe.image.url }}" class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
-                            {% endif %}
+                            <a href="{% url 'recipe_detail' recipe.id %}" class="flex-grow-1 d-flex align-items-center text-decoration-none text-dark ps-3 py-2">
+                                <div class="flex-grow-1 me-2">
+                                    <h6 class="mb-0 fw-bold">{{ recipe.title }}</h6>
+                                    <small class="text-muted">{{ recipe.servings }} servings</small>
+                                </div>
+                                
+                                {% if recipe.image %}
+                                    <img src="{{ recipe.image.url }}" class="rounded shadow-sm" style="width: 60px; height: 60px; object-fit: cover;">
+                                {% else %}
+                                    <div class="rounded bg-light d-flex align-items-center justify-content-center border" style="width: 60px; height: 60px;">
+                                        <i class="bi bi-image text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                <i class="bi bi-chevron-right ms-2 text-muted"></i>
+                            </a>
+
                         </div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
 
-            <div class="fixed-bottom p-3 text-center" style="bottom: 75px; pointer-events: none;">
-                <button type="submit" class="btn btn-warning btn-lg shadow-lg fw-bold px-4 rounded-pill" style="pointer-events: auto; border: 2px solid white;">
-                    <i class="bi bi-basket-fill me-2"></i> Generate Shopping List
+            <div class="fixed-bottom p-3 text-center" style="bottom: 70px; z-index: 1020;">
+                <button type="submit" id="generate-btn" class="btn btn-warning btn-lg shadow-lg fw-bold px-4 rounded-pill d-none" style="border: 2px solid white;">
+                    <i class="bi bi-cart-check-fill me-2"></i> Generate List
                 </button>
             </div>
         </form>
     {% endif %}
 </div>
+
+<script>
+    // Show/Hide generate button based on selection
+    const checkboxes = document.querySelectorAll('input[name="selected_recipes"]');
+    const generateBtn = document.getElementById('generate-btn');
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', () => {
+            const anyChecked = Array.from(checkboxes).some(c => c.checked);
+            if (anyChecked) {
+                generateBtn.classList.remove('d-none');
+            } else {
+                generateBtn.classList.add('d-none');
+            }
+        });
+    });
+</script>
+
+<style>
+    /* Prevents the card items from being hidden by the floating buttons */
+    body { padding-bottom: 150px !important; }
+    
+    /* Makes the checkbox area specifically for selection */
+    .form-check-input { cursor: pointer; }
+    
+    /* Visual feedback for clicking the recipe part */
+    a.flex-grow-1:active {
+        background-color: rgba(0,0,0,0.05);
+        border-radius: 8px;
+    }
+</style>
 {% endblock %}
