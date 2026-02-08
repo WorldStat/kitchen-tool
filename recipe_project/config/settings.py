@@ -72,7 +72,7 @@ DATABASES = {
 # --- AUTHENTICATION ---
 AUTH_USER_MODEL = 'users.CustomUser'
 LOGIN_REDIRECT_URL = 'recipe_list'
-LOGOUT_REDIRECT_URL = 'landing'
+LOGOUT_REDIRECT_URL = '/'
 
 # --- STATIC & MEDIA STORAGE ---
 STATIC_URL = 'static/'
