@@ -4,16 +4,20 @@ from django.contrib import messages
 from .forms import CustomUserCreationForm
 
 def register(request):
+    # SECURITY/UX FIX: Redirect if already logged in
+    if request.user.is_authenticated:
+        return redirect('recipe_list')
+
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            # Log the user in immediately after registration
             login(request, user)
-            messages.success(request, "Registration successful! Welcome to KitchenTool.")
+            messages.success(request, "Welcome to the kitchen! Let's get cooking.")
             return redirect("recipe_list")
         else:
-            messages.error(request, "Unsuccessful registration. Invalid information.")
+            # This triggers the specific field errors in the template
+            messages.error(request, "Please correct the errors below.")
     else:
         form = CustomUserCreationForm()
     
