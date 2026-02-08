@@ -15,9 +15,10 @@ class ShoppingItem(models.Model):
     shopping_list = models.ForeignKey(ShoppingList, related_name='items', on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
     quantity = models.CharField(max_length=100, blank=True)
+    checked = models.BooleanField(default=False)
     
-    # This is the field we need for "crossing off"
-    checked = models.BooleanField(default=False) 
+    # ADD THIS LINE:
+    source_recipe = models.ForeignKey('recipes.Recipe', null=True, blank=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return self.name
