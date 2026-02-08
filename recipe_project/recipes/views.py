@@ -28,36 +28,50 @@ def recipe_detail(request, pk):
     recipe = get_object_or_404(Recipe, pk=pk, owner=request.user)
     return render(request, 'recipes/recipe_detail.html', {'recipe': recipe})
 
-@login_required
+login_required
 def create_recipe(request):
     initial_data = {}
-    if 'import_url' in request.GET:
-        url = request.GET.get('import_url')
+    import_url = request.GET.get('import_url', '')
+
+    # 1. THE SCRAPER LOGIC
+    if import_url:
         try:
-            scraper = scrape_me(url)
+            scraper = scrape_me(import_url)
             initial_data = {
                 'title': scraper.title(),
                 'ingredients': '\n'.join(scraper.ingredients()),
                 'instructions': scraper.instructions(),
-                'servings': scraper.yields()
+                'servings': scraper.yields(),
+                'source_url': import_url # Keep the link for reference
             }
-            messages.success(request, "Recipe imported! Check details below.")
-        except Exception:
-            messages.error(request, "Could not scrape that URL.")
+            messages.info(request, "Data imported! You can now add a photo and save.")
+        except Exception as e:
+            messages.error(request, f"Could not scrape this site. You can still enter it manually!")
 
+    # 2. THE SAVE LOGIC
     if request.method == 'POST':
+        # CRITICAL: request.FILES must be here for the photo to save
         form = RecipeForm(request.POST, request.FILES)
         if form.is_valid():
             recipe = form.save(commit=False)
             recipe.owner = request.user
+            
+            # Premium Check
             if recipe.image and not request.user.is_paid_customer:
                 recipe.image = None
-                messages.warning(request, "Upgrade to Premium to save images!")
+                messages.warning(request, "Photos are a Premium feature. Recipe saved without image.")
+            
             recipe.save()
+            messages.success(request, "Recipe added to your cookbook!")
             return redirect('recipe_list')
     else:
+        # Pre-fill the form with scraped data if it exists
         form = RecipeForm(initial=initial_data)
-    return render(request, 'recipes/create.html', {'form': form})
+
+    return render(request, 'recipes/create.html', {
+        'form': form,
+        'import_url': import_url
+    })
 
 @login_required
 def edit_recipe(request, pk):
