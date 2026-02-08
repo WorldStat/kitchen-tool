@@ -42,4 +42,4 @@ def shopping_list_history(request):
     # Debugging tip: print the count to your terminal to see if any exist
     print(f"Found {user_lists.count()} lists for user {request.user}")
 
-    return render(request, 'shopping/list_history.html', {'user_lists': user_lists})
+    return render(request, 'shopping/history.html', {'user_lists': user_lists})
