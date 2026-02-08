@@ -34,5 +34,12 @@ def toggle_item(request, item_id):
 
 @login_required
 def shopping_list_history(request):
-    lists = ShoppingList.objects.filter(user=request.user).order_by('-created_at')
-    return render(request, 'shopping/history.html', {'lists': lists})
+    # 1. Make sure you are filtering by the current user
+    # 2. Make sure you are ordering by date (newest first)
+    # 3. Use 'prefetch_related' to get the recipes and items in one go
+    user_lists = ShoppingList.objects.filter(user=request.user).prefetch_related('recipes', 'items').order_by('-created_at')
+    
+    # Debugging tip: print the count to your terminal to see if any exist
+    print(f"Found {user_lists.count()} lists for user {request.user}")
+
+    return render(request, 'shopping/list_history.html', {'user_lists': user_lists})
