@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 600px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="{% url 'shopping_list_history' %}" class="text-decoration-none text-muted">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+        <h2 class="fw-bold mb-0">Shopping List</h2>
+        <span class="badge bg-primary rounded-pill">{{ items.count }} items</span>
+    </div>
+
+    <div class="list-group shadow-sm">
+        {% for item in items %}
+        <label class="list-group-item d-flex gap-3 align-items-center p-3" style="cursor: pointer;">
+            
+            <input class="form-check-input flex-shrink-0 item-checkbox" 
+                   type="checkbox" 
+                   value="" 
+                   data-item-id="{{ item.id }}"
+                   style="font-size: 1.3em;"
+                   {% if item.checked %}checked{% endif %}>
+            
+            <span class="pt-1 form-checked-content fw-bold {% if item.checked %}text-decoration-line-through text-muted{% endif %}" 
+                  id="text-{{ item.id }}">
+                {{ item.name }}
+                {% if item.quantity %}
+                    <small class="d-block text-muted fw-normal">{{ item.quantity }}</small>
+                {% endif %}
+            </span>
+        </label>
+        {% empty %}
+        <div class="text-center p-5">
+            <p class="text-muted">This list is empty.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkboxes = document.querySelectorAll('.item-checkbox');
+        
+        checkboxes.forEach(box => {
+            box.addEventListener('change', function() {
+                const itemId = this.dataset.itemId;
+                const textElement = document.getElementById('text-' + itemId);
+                
+                // 1. Visually update immediately (Optimistic UI)
+                if (this.checked) {
+                    textElement.classList.add('text-decoration-line-through', 'text-muted');
+                } else {
+                    textElement.classList.remove('text-decoration-line-through', 'text-muted');
+                }
+
+                // 2. Send request to server
+                fetch(`/shopping/item/${itemId}/toggle/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    },
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        // Revert change if server fails
+                        this.checked = !this.checked;
+                        alert('Something went wrong. Please try again.');
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -13,12 +13,11 @@ class ShoppingList(models.Model):
 
 class ShoppingItem(models.Model):
     shopping_list = models.ForeignKey(ShoppingList, related_name='items', on_delete=models.CASCADE)
-    name = models.CharField(max_length=255) # e.g., "Carrots"
-    quantity_raw = models.CharField(max_length=100) # e.g., "3 large"
-    is_purchased = models.BooleanField(default=False)
+    name = models.CharField(max_length=200)
+    quantity = models.CharField(max_length=100, blank=True)
     
-    # This link helps the 'Farmer Demand' logic know why this was bought
-    source_recipe = models.ForeignKey(Recipe, on_delete=models.SET_NULL, null=True)
+    # This is the field we need for "crossing off"
+    checked = models.BooleanField(default=False) 
 
     def __str__(self):
-        return f"{self.quantity_raw} {self.name}"
+        return self.name
