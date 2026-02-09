@@ -43,3 +43,19 @@ def shopping_list_history(request):
     print(f"Found {user_lists.count()} lists for user {request.user}")
 
     return render(request, 'shopping/history.html', {'user_lists': user_lists})
+
+@login_required
+def shopping_list_delete(request, pk):
+    # Ensure the list exists AND belongs to the user
+    shopping_list = get_object_or_404(ShoppingList, pk=pk, user=request.user)
+    
+    if request.method == "POST":
+        shopping_list.delete()
+        messages.success(request, "Shopping list permanently deleted.")
+        return redirect('shopping_list_history')
+    
+    # Render the confirmation page (reuse your existing delete confirmation template)
+    return render(request, 'recipes/confirm_delete.html', {
+        'object': f"Shopping List from {shopping_list.created_at.date()}",
+        'cancel_url': 'shopping_list_history'
+    })
