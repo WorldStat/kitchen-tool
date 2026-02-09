@@ -10,4 +10,7 @@ urlpatterns = [
     
     # NEW: The "Click" Action
     path('item/<int:item_id>/toggle/', views.toggle_item, name='toggle_item'),
+
+    # NEW: The Delete Action
+    path('list/<int:pk>/delete/', views.shopping_list_delete, name='shopping_list_delete'),
 ]
