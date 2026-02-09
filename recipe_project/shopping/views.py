@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from .models import ShoppingList, ShoppingItem
+from django.contrib import messages
 
 # 1. The Page You See
 @login_required
