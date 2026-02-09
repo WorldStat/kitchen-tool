@@ -6,8 +6,6 @@ urlpatterns = [
     path('create/', views.create_recipe, name='create_recipe'),
     # New Detail View
     path('<int:pk>/', views.recipe_detail, name='recipe_detail'),
-    path('<int:pk>/edit/', views.edit_recipe, name='edit_recipe'),
-    path('<int:pk>/delete/', views.delete_recipe, name='delete_recipe'),
     # Shopping Logic
     path('generate-shopping/', views.generate_shopping_list, name='generate_shopping_list'),
     # Editing Recipe Ingredients
