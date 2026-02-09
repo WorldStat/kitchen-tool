@@ -74,23 +74,39 @@ def create_recipe(request):
     })
 
 @login_required
-def edit_recipe(request, pk):
-    recipe = get_object_or_404(Recipe, pk=pk, owner=request.user)
-    if request.method == 'POST':
+def recipe_edit(request, pk):
+    recipe = get_object_or_404(Recipe, pk=pk)
+    
+    # Security Check
+    if recipe.owner != request.user:
+        messages.error(request, "You are not allowed to edit this recipe.")
+        return redirect('recipe_list')
+
+    if request.method == "POST":
         form = RecipeForm(request.POST, request.FILES, instance=recipe)
         if form.is_valid():
             form.save()
+            messages.success(request, "Recipe updated successfully!")
             return redirect('recipe_detail', pk=recipe.pk)
     else:
         form = RecipeForm(instance=recipe)
-    return render(request, 'recipes/create.html', {'form': form, 'edit_mode': True})
+
+    return render(request, 'recipes/create.html', {'form': form, 'editing': True})
 
 @login_required
-def delete_recipe(request, pk):
-    recipe = get_object_or_404(Recipe, pk=pk, owner=request.user)
-    if request.method == 'POST':
+def recipe_delete(request, pk):
+    recipe = get_object_or_404(Recipe, pk=pk)
+    
+    if recipe.owner != request.user:
+        messages.error(request, "You cannot delete this recipe.")
+        return redirect('recipe_list')
+
+    if request.method == "POST":
         recipe.delete()
-    return redirect('recipe_list')
+        messages.success(request, "Recipe deleted.")
+        return redirect('recipe_list')
+    
+    return render(request, 'recipes/confirm_delete.html', {'object': recipe})
 
 @login_required
 def generate_shopping_list(request):

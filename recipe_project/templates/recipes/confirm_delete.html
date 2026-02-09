@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5 text-center">
+    <div class="card shadow-sm p-5 mx-auto" style="max-width: 500px;">
+        <h3 class="text-danger fw-bold">Delete Recipe?</h3>
+        <p>Are you sure you want to delete <strong>"{{ object.title }}"</strong>? This cannot be undone.</p>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <div class="d-flex justify-content-center gap-3 mt-4">
+                <a href="{% url 'recipe_detail' object.pk %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-danger fw-bold">Yes, Delete It</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
