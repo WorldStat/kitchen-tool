@@ -47,7 +47,7 @@ def shopping_list_history(request):
 
 @login_required
 def shopping_list_delete(request, pk):
-    # Ensure the list exists AND belongs to the user
+    # This line is the 'security guard'. If the list.user != request.user, it returns a 404.
     shopping_list = get_object_or_404(ShoppingList, pk=pk, user=request.user)
     
     if request.method == "POST":
@@ -55,8 +55,6 @@ def shopping_list_delete(request, pk):
         messages.success(request, "Shopping list permanently deleted.")
         return redirect('shopping_list_history')
     
-    # Render the confirmation page (reuse your existing delete confirmation template)
     return render(request, 'recipes/confirm_delete.html', {
-        'object': f"Shopping List from {shopping_list.created_at.date()}",
-        'cancel_url': 'shopping_list_history'
+        'object': f"Shopping List #{shopping_list.pk}"
     })
