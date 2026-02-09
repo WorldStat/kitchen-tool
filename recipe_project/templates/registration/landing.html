@@ -1,0 +1,267 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KitchenTool | Master Your Meals</title>
+    <style>
+        /* --- MODERN CSS VARIABLES --- */
+        :root {
+            --primary: #2d6a4f;   /* Sage Green */
+            --accent: #d0f4de;    /* Light Mint */
+            --dark: #1b4332;      /* Deep Forest */
+            --text: #2c3e50;      /* Slate */
+            --white: #ffffff;
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: var(--font-main);
+            color: var(--text);
+            background-color: #f8f9fa;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* --- ANIMATION CLASSES (Used by JS) --- */
+        .hidden-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        .show-scroll {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- LAYOUT --- */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 2; /* Sit above background animation */
+        }
+
+        /* --- HERO SECTION --- */
+        header {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(208, 244, 222, 0.8));
+            position: relative;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 1rem;
+            letter-spacing: -1px;
+        }
+
+        p.subtitle {
+            font-size: 1.25rem;
+            color: #555;
+            max-width: 600px;
+            margin-bottom: 2rem;
+        }
+
+        /* --- BUTTONS --- */
+        .btn-group { display: flex; gap: 1rem; }
+
+        .btn {
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--white);
+            box-shadow: 0 4px 15px rgba(45, 106, 79, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(45, 106, 79, 0.4);
+        }
+
+        .btn-outline {
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        /* --- FEATURES SECTION --- */
+        section { padding: 80px 0; }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            text-align: left;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        /* --- BACKGROUND FLOATING THOUGHTS --- */
+        #thought-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .thought-bubble {
+            position: absolute;
+            color: rgba(45, 106, 79, 0.15); /* Faint green */
+            font-weight: 700;
+            font-size: 1.2rem;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="thought-canvas"></div>
+
+    <header>
+        <div class="container hidden-scroll">
+            <h1>Stop Cooking in Chaos.</h1>
+            <p class="subtitle">
+                Organize your recipes, automate your grocery lists, and stop throwing away money on wasted food. 
+                Reclaim your kitchen and your peace of mind.
+            </p>
+            <div class="btn-group">
+                <a href="{% url 'register' %}" class="btn btn-primary">Start Saving Money</a>
+                <a href="{% url 'login' %}" class="btn btn-outline">Sign In</a>
+            </div>
+        </div>
+    </header>
+
+    <section id="why">
+        <div class="container">
+            <h2 class="hidden-scroll" style="text-align: center; color: var(--dark); margin-bottom: 10px;">Why use KitchenTool?</h2>
+            <div class="features-grid">
+                
+                <div class="feature-card hidden-scroll">
+                    <span class="feature-icon">💸</span>
+                    <h3>Save $150+ Monthly</h3>
+                    <p>The average household throws away 30% of their groceries. Our smart scraper and shopping list builder ensure you buy only what you need.</p>
+                </div>
+
+                <div class="feature-card hidden-scroll" style="transition-delay: 100ms;">
+                    <span class="feature-icon">🧠</span>
+                    <h3>Reduce Mental Load</h3>
+                    <p>Stop asking "What's for dinner?". Import recipes from any website with one click and let us handle the planning logic.</p>
+                </div>
+
+                <div class="feature-card hidden-scroll" style="transition-delay: 200ms;">
+                    <span class="feature-icon">⚡</span>
+                    <h3>Instant Scraping</h3>
+                    <p>See a recipe you like? Paste the URL, and we strip away the ads, the life stories, and the clutter. Just the food.</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <footer style="background: var(--dark); color: var(--white); padding: 40px 0; text-align: center;">
+        <p>&copy; {% now "Y" %} KitchenTool. Built for efficient living.</p>
+    </footer>
+
+    <script>
+        // 1. SCROLL INTERSECTION OBSERVER
+        // Triggers fade-up animation when elements come into view
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('show-scroll');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.hidden-scroll').forEach((el) => observer.observe(el));
+
+        // 2. IDLE THOUGHTS BACKGROUND ANIMATION
+        // Floats text around the screen to simulate "kitchen anxiety"
+        const thoughts = [
+            "What's for dinner?", "Did I buy eggs?", "Spinach is wilting...", 
+            "Too much takeout...", "Where is that recipe?", "Missing ingredients...", 
+            "Spending too much...", "Fridge is a mess..."
+        ];
+
+        const canvas = document.getElementById('thought-canvas');
+
+        function createThought() {
+            const el = document.createElement('div');
+            el.classList.add('thought-bubble');
+            el.innerText = thoughts[Math.floor(Math.random() * thoughts.length)];
+            
+            // Random positioning
+            el.style.left = Math.random() * 90 + '%';
+            el.style.top = '110%'; // Start below screen
+            
+            // Random size variation
+            const scale = 0.8 + Math.random() * 0.5;
+            el.style.fontSize = `${scale}rem`;
+
+            canvas.appendChild(el);
+
+            // Animate
+            const duration = 10000 + Math.random() * 10000; // 10-20s float time
+            const animation = el.animate([
+                { transform: 'translateY(0)', opacity: 0 },
+                { transform: `translateY(-${window.innerHeight + 100}px)`, opacity: 0.4 }, // Fade in mid-flight
+                { transform: `translateY(-${window.innerHeight + 200}px)`, opacity: 0 }
+            ], {
+                duration: duration,
+                easing: 'linear'
+            });
+
+            animation.onfinish = () => el.remove();
+        }
+
+        // Create a new bubble every 1.5 seconds
+        setInterval(createThought, 1500);
+        // Create a few immediately so screen isn't empty
+        for(let i=0; i<5; i++) setTimeout(createThought, i * 300);
+
+    </script>
+</body>
+</html>
