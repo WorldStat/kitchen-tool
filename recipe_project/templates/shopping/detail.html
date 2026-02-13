@@ -1,75 +1,128 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container py-4" style="max-width: 600px;">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <a href="{% url 'shopping_list_history' %}" class="text-decoration-none text-muted">
-            <i class="bi bi-arrow-left"></i> Back
-        </a>
-        <h2 class="fw-bold mb-0">Shopping List</h2>
-        <span class="badge bg-primary rounded-pill">{{ items.count }} items</span>
-    </div>
-
-    <div class="list-group shadow-sm">
-        {% for item in items %}
-        <label class="list-group-item d-flex gap-3 align-items-center p-3" style="cursor: pointer;">
+<div class="position-relative bg-success text-white overflow-hidden mb-4 shadow-sm" style="min-height: 180px; border-radius: 0 0 20px 20px;">
+    <div class="position-absolute w-100 h-100" id="wave-bg" style="opacity: 0.2;"></div>
+    
+    <div class="container position-relative h-100 d-flex flex-column justify-content-center py-4">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h1 class="fw-bold mb-0 display-6">{{ shopping_list.title }}</h1>
+                <p class="mb-0 opacity-75 small">Created: {{ shopping_list.created_at|date:"M d, Y" }}</p>
+            </div>
             
-            <input class="form-check-input flex-shrink-0 item-checkbox" 
-                   type="checkbox" 
-                   value="" 
-                   data-item-id="{{ item.id }}"
-                   style="font-size: 1.3em;"
-                   {% if item.checked %}checked{% endif %}>
-            
-            <span class="pt-1 form-checked-content fw-bold {% if item.checked %}text-decoration-line-through text-muted{% endif %}" 
-                  id="text-{{ item.id }}">
-                {{ item.name }}
-                {% if item.quantity %}
-                    <small class="d-block text-muted fw-normal">{{ item.quantity }}</small>
-                {% endif %}
-            </span>
-        </label>
-        {% empty %}
-        <div class="text-center p-5">
-            <p class="text-muted">This list is empty.</p>
+            <a href="{% url 'shopping_list_edit' shopping_list.pk %}" class="btn btn-outline-light btn-sm rounded-pill">
+                <i class="bi bi-pencil"></i> Rename
+            </a>
         </div>
-        {% endfor %}
+        
+        <div class="progress mt-3 bg-white bg-opacity-25" style="height: 6px;">
+            <div class="progress-bar bg-white" id="progress-bar" style="width: 0%;"></div>
+        </div>
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const checkboxes = document.querySelectorAll('.item-checkbox');
-        
-        checkboxes.forEach(box => {
-            box.addEventListener('change', function() {
-                const itemId = this.dataset.itemId;
-                const textElement = document.getElementById('text-' + itemId);
+<div class="container pb-5 mb-5">
+    <div class="card shadow-sm border-0">
+        <div class="list-group list-group-flush" id="shopping-list">
+            {% for item in items %}
+            <label class="list-group-item d-flex align-items-center gap-3 py-3 cursor-pointer user-select-none">
+                <input class="form-check-input flex-shrink-0 border-2" 
+                       type="checkbox" 
+                       value="" 
+                       data-id="{{ item.id }}"
+                       {% if item.checked %}checked{% endif %}
+                       style="width: 1.6em; height: 1.6em;">
                 
-                // 1. Visually update immediately (Optimistic UI)
-                if (this.checked) {
-                    textElement.classList.add('text-decoration-line-through', 'text-muted');
-                } else {
-                    textElement.classList.remove('text-decoration-line-through', 'text-muted');
-                }
+                <span class="flex-grow-1 {% if item.checked %}text-decoration-line-through text-muted{% endif %}">
+                    {{ item.name }}
+                    {% if item.quantity %}
+                        <span class="badge bg-secondary bg-opacity-10 text-dark ms-2">{{ item.quantity }}</span>
+                    {% endif %}
+                </span>
+            </label>
+            {% empty %}
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-basket display-4 opacity-25"></i>
+                <p class="mt-2">List is empty. Add some items!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
 
-                // 2. Send request to server
-                fetch(`/shopping/item/${itemId}/toggle/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}',
-                        'Content-Type': 'application/json'
-                    },
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        // Revert change if server fails
-                        this.checked = !this.checked;
-                        alert('Something went wrong. Please try again.');
-                    }
-                });
+<div class="fixed-bottom bg-white border-top shadow-lg p-3" style="z-index: 1040; margin-bottom: 60px;"> <form method="POST" action="{% url 'add_item' shopping_list.pk %}" class="d-flex gap-2">
+        {% csrf_token %}
+        <div class="flex-grow-1">
+            {{ item_form.name }}
+        </div>
+        <div style="width: 100px;">
+            {{ item_form.quantity }}
+        </div>
+        <button type="submit" class="btn btn-success shadow-sm">
+            <i class="bi bi-plus-lg"></i>
+        </button>
+    </form>
+</div>
+
+<script>
+    // 1. WAVE ANIMATION
+    const waveBg = document.getElementById('wave-bg');
+    let offset = 0;
+    function animateWave() {
+        offset += 1;
+        waveBg.style.background = `repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 10px,
+            rgba(255,255,255,0.1) 10px,
+            rgba(255,255,255,0.1) 20px
+        )`;
+        waveBg.style.backgroundPosition = `${offset}px 0`;
+        requestAnimationFrame(animateWave);
+    }
+    animateWave();
+
+    // 2. CHECKBOX LOGIC (With Progress Bar)
+    const checkboxes = document.querySelectorAll('.form-check-input');
+    const progressBar = document.getElementById('progress-bar');
+    
+    function updateProgress() {
+        const total = checkboxes.length;
+        if (total === 0) return;
+        const checked = document.querySelectorAll('.form-check-input:checked').length;
+        const percent = (checked / total) * 100;
+        progressBar.style.width = percent + '%';
+    }
+    updateProgress(); // Run on load
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', function() {
+            const span = this.nextElementSibling;
+            
+            // Visual Update
+            if (this.checked) {
+                span.classList.add('text-decoration-line-through', 'text-muted');
+            } else {
+                span.classList.remove('text-decoration-line-through', 'text-muted');
+            }
+            updateProgress();
+
+            // AJAX Update
+            fetch(`/shopping/item/${this.dataset.id}/toggle/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
             });
         });
     });
 </script>
+
+<style>
+    /* Pushes content up so the floating bar doesn't cover the last item */
+    body { padding-bottom: 160px !important; } 
+    .cursor-pointer { cursor: pointer; }
+</style>
 {% endblock %}

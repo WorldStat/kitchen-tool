@@ -4,21 +4,19 @@ from recipes.models import Recipe  # Ensure this import works
 
 class ShoppingList(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    # NEW: Allow users to name their list (e.g., "Sunday Dinner")
+    title = models.CharField(max_length=100, default="My Shopping List") 
     created_at = models.DateTimeField(auto_now_add=True)
-    
-    # CRITICAL: This allows us to know which recipes generated this list
     recipes = models.ManyToManyField(Recipe, blank=True, related_name='shopping_lists')
 
     def __str__(self):
-        return f"List {self.pk} for {self.user.username}"
+        return self.title
 
 class ShoppingItem(models.Model):
     shopping_list = models.ForeignKey(ShoppingList, related_name='items', on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
     quantity = models.CharField(max_length=100, blank=True)
     checked = models.BooleanField(default=False)
-    
-    # Tracks which specific recipe this item came from
     source_recipe = models.ForeignKey(Recipe, null=True, blank=True, on_delete=models.SET_NULL)
 
     def __str__(self):
