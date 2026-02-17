@@ -10,4 +10,5 @@ urlpatterns = [
     path('list/<int:pk>/delete/', views.shopping_list_delete, name='shopping_list_delete'),
     path('generate/', views.generate_shopping_list, name='generate_shopping_list'),
     path('item/<int:item_id>/toggle/', views.toggle_item, name='toggle_item'),
+    path('item/<int:item_id>/delete/', views.delete_item, name='delete_item'),
 ]

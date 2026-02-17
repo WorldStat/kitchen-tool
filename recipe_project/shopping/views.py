@@ -16,9 +16,13 @@ def shopping_list_detail(request, pk):
     # or just list them all.
     items = shopping_list.items.all().order_by('checked', 'name')
     
+    # Form for adding new items
+    item_form = ShoppingItemForm()
+    
     return render(request, 'shopping/detail.html', {
         'shopping_list': shopping_list,
-        'items': items
+        'items': items,
+        'item_form': item_form,
     })
 
 # 2. The Invisible "Click" Handler
@@ -136,4 +140,15 @@ def add_item(request, pk):
     return redirect('shopping_list_detail', pk=pk)
 
 
-
+# --- NEW: DELETE ITEM MANUALLY ---
+@login_required
+@require_POST
+def delete_item(request, item_id):
+    # Get the item, ensuring it belongs to a list owned by the current user
+    item = get_object_or_404(ShoppingItem, pk=item_id, shopping_list__user=request.user)
+    
+    # Delete the item
+    item.delete()
+    
+    # Return success to JavaScript
+    return JsonResponse({'status': 'success'})
