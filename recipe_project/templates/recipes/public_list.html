@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="bg-primary bg-gradient text-white py-5 mb-5" style="border-radius: 0 0 40px 40px; margin-top: -24px;">
+    <div class="container text-center">
+        <h1 class="display-4 fw-bold mb-2">Community Cookbook</h1>
+        <p class="lead opacity-75">Discover and share recipes with chefs around the world</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for recipe in recipes %}
+        <div class="col">
+            <div class="card h-100 border-0 shadow-sm overflow-hidden" style="border-radius: 15px;">
+                {% if recipe.image %}
+                    <img src="{{ recipe.image.url }}" class="card-img-top" alt="{{ recipe.title }}" style="height: 200px; object-fit: cover;">
+                {% else %}
+                    <div class="bg-light text-center py-5">
+                        <i class="bi bi-camera-fill display-4 text-muted opacity-25"></i>
+                    </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title fw-bold mb-0 text-dark">{{ recipe.title }}</h5>
+                        <span class="badge bg-light text-dark border">{{ recipe.servings }} <i class="bi bi-people-fill ms-1"></i></span>
+                    </div>
+                    <p class="card-text text-muted small mb-3">By <span class="fw-bold">{{ recipe.owner.username }}</span></p>
+                    
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'recipe_detail' recipe.pk %}" class="btn btn-outline-primary btn-sm flex-grow-1 rounded-pill">View Details</a>
+                        {% if user.is_authenticated and user != recipe.owner %}
+                        <a href="{% url 'clone_recipe' recipe.pk %}" class="btn btn-success btn-sm rounded-pill" title="Add to My Cookbook">
+                            <i class="bi bi-plus-lg"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="p-5 bg-white shadow-sm rounded-4">
+                <i class="bi bi-globe display-1 text-muted opacity-25"></i>
+                <h3 class="mt-3 fw-bold">No public recipes yet</h3>
+                <p class="text-muted">Be the first to share a recipe with the community!</p>
+                <a href="{% url 'create_recipe' %}" class="btn btn-primary mt-3 px-4 rounded-pill">Share a Recipe</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

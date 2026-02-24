@@ -55,11 +55,30 @@
         <div class="container">
             <a class="navbar-brand fw-bold" href="{% url 'landing_page' %}">🍳 KitchenTool</a>
             <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'community_cookbook' %}"><i class="bi bi-globe"></i> Community</a></li>
                     {% if user.is_authenticated %}
-                        <li class="nav-item"><a class="nav-link" href="{% url 'recipe_list' %}">Cookbook</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'shopping_list_history' %}">Lists</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'recipe_list' %}">My Cookbook</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'shopping_list_history' %}">My Lists</a></li>
+                        <li class="nav-item ms-2 dropdown">
+                            <a class="nav-link dropdown-toggle btn btn-success btn-sm text-white px-3" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-circle"></i> {{ user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form action="{% url 'logout' %}" method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>Logout</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
                         <li class="nav-item ms-3"><a class="btn btn-warning fw-bold" href="{% url 'create_recipe' %}">+ Add Recipe</a></li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
+                        <li class="nav-item"><a class="btn btn-outline-light ms-2" href="{% url 'register' %}">Sign Up</a></li>
                     {% endif %}
                 </ul>
             </div>
@@ -84,11 +103,17 @@
         <a href="{% url 'recipe_list' %}" class="nav-item-mobile">
             <i class="bi bi-journal-text"></i>Recipes
         </a>
+        <a href="{% url 'community_cookbook' %}" class="nav-item-mobile">
+            <i class="bi bi-globe"></i>Explore
+        </a>
         <a href="{% url 'create_recipe' %}" class="nav-item-mobile add-btn-center">
             <i class="bi bi-plus-lg" style="font-size: 2rem;"></i>
         </a>
         <a href="{% url 'shopping_list_history' %}" class="nav-item-mobile">
             <i class="bi bi-cart3"></i>Lists
+        </a>
+        <a href="{% url 'profile' %}" class="nav-item-mobile">
+            <i class="bi bi-person"></i>Account
         </a>
     </div>
     {% endif %}
