@@ -20,7 +20,12 @@
                     {% endif %}
                     {% if recipe.prep_time %}
                     <span class="badge bg-info bg-opacity-75 fs-6 border border-light">
-                        <i class="bi bi-clock-fill"></i> {{ recipe.prep_time }} mins
+                        <i class="bi bi-clock"></i> Prep: {{ recipe.prep_time }}m
+                    </span>
+                    {% endif %}
+                    {% if recipe.cook_time %}
+                    <span class="badge bg-danger bg-opacity-75 fs-6 border border-light">
+                        <i class="bi bi-fire"></i> Cook: {{ recipe.cook_time }}m
                     </span>
                     {% endif %}
                     {% if recipe.source_url %}
@@ -30,7 +35,13 @@
                     {% endif %}
                 </div>
 
-                <div class="mt-4 d-flex gap-2">
+                <div class="mt-4 d-flex flex-wrap gap-2">
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'add_recipe_to_list' recipe.pk %}" class="btn btn-warning btn-sm text-dark fw-bold px-3">
+                        <i class="bi bi-cart-plus-fill"></i> Create Shopping List
+                    </a>
+                    {% endif %}
+                    
                     {% if request.user == recipe.owner %}
                         <a href="{% url 'recipe_edit' recipe.pk %}" class="btn btn-outline-light btn-sm">
                             <i class="bi bi-pencil-square"></i> Edit

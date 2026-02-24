@@ -7,6 +7,8 @@ class Recipe(models.Model):
     ingredients = models.TextField()
     instructions = models.TextField()
     servings = models.IntegerField(default=1)
+    prep_time = models.IntegerField(default=0, help_text="Time in minutes")
+    cook_time = models.IntegerField(default=0, help_text="Time in minutes")
     image = models.ImageField(upload_to='recipe_photos/', null=True, blank=True)
     source_url = models.URLField(max_length=500, null=True, blank=True)
     is_public = models.BooleanField(default=False)

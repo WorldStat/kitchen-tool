@@ -37,11 +37,19 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6 mb-4">
+                            <div class="col-md-3 mb-4">
                                 <label class="form-label fw-bold">Servings</label>
                                 {{ form.servings }}
                             </div>
-                            <div class="col-md-6 mb-4">
+                            <div class="col-md-3 mb-4">
+                                <label class="form-label fw-bold">Prep Time (min)</label>
+                                {{ form.prep_time }}
+                            </div>
+                            <div class="col-md-3 mb-4">
+                                <label class="form-label fw-bold">Cook Time (min)</label>
+                                {{ form.cook_time }}
+                            </div>
+                            <div class="col-md-3 mb-4">
                                 <label class="form-label fw-bold">Source URL</label>
                                 {{ form.source_url }}
                             </div>
@@ -55,6 +63,18 @@
                         <div class="mb-4">
                             <label class="form-label fw-bold">Instructions</label>
                             {{ form.instructions }}
+                        </div>
+
+                        <div class="mb-4 form-check form-switch p-3 border rounded bg-white shadow-sm">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <label class="form-check-label fw-bold" for="id_is_public">Publicly Shared</label>
+                                    <div class="form-text mt-0">If enabled, anyone with the link can view this recipe.</div>
+                                </div>
+                                <div class="form-check form-switch fs-4">
+                                    {{ form.is_public }}
+                                </div>
+                            </div>
                         </div>
 
                         <div class="d-grid gap-2">

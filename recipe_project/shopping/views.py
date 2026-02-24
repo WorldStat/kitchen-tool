@@ -194,3 +194,31 @@ def manage_collaborators(request, pk):
         return redirect('shopping_list_detail', pk=pk)
     
     return redirect('shopping_list_detail', pk=pk)
+
+@login_required
+def add_recipe_to_list(request, pk):
+    """
+    Creates a new shopping list from a single recipe's ingredients.
+    """
+    from recipes.models import Recipe
+    from django.utils import timezone
+    from django.db.models import Q
+    
+    # Allow adding from public recipes OR owned recipes
+    recipe = get_object_or_404(Recipe, Q(pk=pk) & (Q(owner=request.user) | Q(is_public=True)))
+    
+    default_title = f"Shopping for {recipe.title}"
+    new_list = ShoppingList.objects.create(user=request.user, title=default_title)
+    new_list.recipes.add(recipe)
+
+    # Process ingredients
+    for ingredient in recipe.ingredients.splitlines():
+        if ingredient.strip():
+            ShoppingItem.objects.create(
+                shopping_list=new_list, 
+                name=ingredient.strip(), 
+                source_recipe=recipe
+            )
+            
+    messages.success(request, f"Shopping list created for {recipe.title}!")
+    return redirect('shopping_list_detail', pk=new_list.pk)
