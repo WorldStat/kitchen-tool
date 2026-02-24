@@ -1,11 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView
 from django.contrib import messages
 from recipe_scrapers import scrape_me
-from django.shortcuts import render, redirect, get_object_or_404
-from .models import Recipe  # Local to recipes app
-from shopping.models import ShoppingList, ShoppingItem  # Pulling from shopping app
+from django.db.models import Q
 
 from .models import Recipe
 from .forms import RecipeForm
@@ -24,7 +22,6 @@ def recipe_list(request):
 
 def recipe_detail(request, pk):
     # Allow viewing if public OR if the current user is the owner
-    from django.db.models import Q
     if request.user.is_authenticated:
         recipe = get_object_or_404(Recipe, Q(pk=pk) & (Q(owner=request.user) | Q(is_public=True)))
     else:
@@ -45,7 +42,7 @@ def create_recipe(request):
                 'ingredients': '\n'.join(scraper.ingredients()),
                 'instructions': scraper.instructions(),
                 'servings': scraper.yields(),
-                'source_url': import_url # Keep the link for reference
+                'source_url': import_url
             }
             messages.info(request, "Data imported! You can now add a photo and save.")
         except Exception as e:
@@ -53,24 +50,16 @@ def create_recipe(request):
 
     # 2. THE SAVE LOGIC
     if request.method == 'POST':
-        # CRITICAL: request.FILES must be here for the photo to save
         form = RecipeForm(request.POST, request.FILES)
         if form.is_valid():
             recipe = form.save(commit=False)
             recipe.owner = request.user
-            
-            # Premium Check
-            if recipe.image and not request.user.is_paid_customer:
-                recipe.image = None
-                messages.warning(request, "Photos are a Premium feature. Recipe saved without image.")
-            
             recipe.save()
             messages.success(request, "Recipe added to your cookbook!")
             return redirect('recipe_list')
         else:
-            messages.error(request, "Error saving recipe. Please check the fields below.")
+            messages.error(request, f"Error saving recipe: {form.errors}")
     else:
-        # Pre-fill the form with scraped data if it exists
         form = RecipeForm(initial=initial_data)
 
     return render(request, 'recipes/create.html', {
@@ -90,21 +79,11 @@ def recipe_edit(request, pk):
     if request.method == "POST":
         form = RecipeForm(request.POST, request.FILES, instance=recipe)
         if form.is_valid():
-            edited_recipe = form.save(commit=False)
-            
-            # Premium Check
-            if edited_recipe.image and not request.user.is_paid_customer:
-                # If they tried to add/change an image but aren't paid, revert it
-                # We check if the image has changed by comparing to the original
-                if edited_recipe.image != recipe.image:
-                    edited_recipe.image = recipe.image
-                    messages.warning(request, "Photos are a Premium feature. Image change ignored.")
-            
-            edited_recipe.save()
+            form.save()
             messages.success(request, "Recipe updated successfully!")
             return redirect('recipe_detail', pk=recipe.pk)
         else:
-            messages.error(request, "Error updating recipe. Please check the fields below.")
+            messages.error(request, f"Error updating recipe: {form.errors}")
     else:
         form = RecipeForm(instance=recipe)
 
