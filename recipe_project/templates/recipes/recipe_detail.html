@@ -1,65 +1,67 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="position-relative bg-dark text-white overflow-hidden mb-5" style="min-height: 300px;">
-    <canvas id="geo-canvas" class="position-absolute top-0 start-0 w-100 h-100" style="opacity: 0.3;"></canvas>
+<div class="position-relative overflow-hidden mb-5 shadow" style="border-radius: 0 0 50px 50px; margin-top: -24px; min-height: 350px;">
+    <!-- Vibrant Gradient Background -->
+    <div class="position-absolute top-0 start-0 w-100 h-100" style="background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 50%, #52b788 100%);"></div>
+    <canvas id="geo-canvas" class="position-absolute top-0 start-0 w-100 h-100" style="opacity: 0.2;"></canvas>
     
     <div class="container position-relative z-index-1 h-100 d-flex flex-column justify-content-center py-5">
         <div class="row align-items-center">
             <div class="col-lg-8">
-                <h1 class="display-3 fw-bold mb-3" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">{{ recipe.title }}</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-4">
+                        <li class="breadcrumb-item"><a href="{% url 'recipe_list' %}" class="text-white opacity-75 text-decoration-none">My Cookbook</a></li>
+                        <li class="breadcrumb-item active text-white fw-bold" aria-current="page">{{ recipe.title }}</li>
+                    </ol>
+                </nav>
                 
-                <div class="d-flex flex-wrap gap-3 mb-3">
-                    <span class="badge bg-success bg-opacity-75 fs-6 border border-light">
-                        <i class="bi bi-people-fill"></i> {{ recipe.servings }} Servings
+                <h1 class="display-2 fw-bold text-white mb-4" style="text-shadow: 0 4px 15px rgba(0,0,0,0.2);">{{ recipe.title }}</h1>
+                
+                <div class="d-flex flex-wrap gap-3 mb-4">
+                    <span class="badge bg-white text-dark rounded-pill px-3 py-2 fs-6 shadow-sm">
+                        <i class="bi bi-people-fill text-success"></i> {{ recipe.servings }} Servings
                     </span>
-                    {% if recipe.is_public %}
-                    <span class="badge bg-primary bg-opacity-75 fs-6 border border-light">
-                        <i class="bi bi-globe"></i> Public
-                    </span>
-                    {% endif %}
                     {% if recipe.prep_time %}
-                    <span class="badge bg-info bg-opacity-75 fs-6 border border-light">
-                        <i class="bi bi-clock"></i> Prep: {{ recipe.prep_time }}m
+                    <span class="badge bg-white text-dark rounded-pill px-3 py-2 fs-6 shadow-sm">
+                        <i class="bi bi-clock text-info"></i> Prep: {{ recipe.prep_time }}m
                     </span>
                     {% endif %}
                     {% if recipe.cook_time %}
-                    <span class="badge bg-danger bg-opacity-75 fs-6 border border-light">
-                        <i class="bi bi-fire"></i> Cook: {{ recipe.cook_time }}m
+                    <span class="badge bg-white text-dark rounded-pill px-3 py-2 fs-6 shadow-sm">
+                        <i class="bi bi-fire text-danger"></i> Cook: {{ recipe.cook_time }}m
                     </span>
                     {% endif %}
-                    {% if recipe.source_url %}
-                    <a href="{{ recipe.source_url }}" target="_blank" class="badge bg-light text-dark text-decoration-none fs-6">
-                        <i class="bi bi-link-45deg"></i> Original Source
-                    </a>
+                    {% if recipe.is_public %}
+                    <span class="badge bg-warning text-dark rounded-pill px-3 py-2 fs-6 shadow-sm border border-white">
+                        <i class="bi bi-globe"></i> Public
+                    </span>
                     {% endif %}
                 </div>
 
-                <div class="mt-4 d-flex flex-wrap gap-2">
+                <div class="d-flex flex-wrap gap-2 mt-2">
                     {% if user.is_authenticated %}
-                    <a href="{% url 'add_recipe_to_list' recipe.pk %}" class="btn btn-warning btn-sm text-dark fw-bold px-3">
-                        <i class="bi bi-cart-plus-fill"></i> Create Shopping List
-                    </a>
+                        <a href="{% url 'add_recipe_to_list' recipe.pk %}" class="btn btn-warning fw-bold px-4 rounded-pill shadow">
+                            <i class="bi bi-cart-plus-fill me-2"></i> Add to Shopping List
+                        </a>
+                    {% endif %}
+
+                    {% if request.user == recipe.owner %}
+                        <a href="{% url 'recipe_edit' recipe.pk %}" class="btn btn-outline-light px-4 rounded-pill">
+                            <i class="bi bi-pencil-square me-1"></i> Edit
+                        </a>
+                        <a href="{% url 'recipe_delete' recipe.pk %}" class="btn btn-outline-danger border-0 px-3 rounded-pill" onclick="return confirm('Delete this recipe permanently?')">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    {% elif user.is_authenticated and recipe.is_public %}
+                        <a href="{% url 'clone_recipe' recipe.pk %}" class="btn btn-success fw-bold px-4 rounded-pill shadow">
+                            <i class="bi bi-journal-plus me-1"></i> Copy to My Cookbook
+                        </a>
                     {% endif %}
                     
-                    {% if request.user == recipe.owner %}
-                        <a href="{% url 'recipe_edit' recipe.pk %}" class="btn btn-outline-light btn-sm">
-                            <i class="bi bi-pencil-square"></i> Edit
-                        </a>
-                        <a href="{% url 'recipe_delete' recipe.pk %}" class="btn btn-outline-danger btn-sm">
-                            <i class="bi bi-trash"></i> Delete
-                        </a>
-                        {% if recipe.is_public %}
-                        <button class="btn btn-primary btn-sm" onclick="copyShareLink()">
-                            <i class="bi bi-share"></i> Copy Share Link
-                        </button>
-                        {% endif %}
-                    {% elif request.user.is_authenticated and recipe.is_public %}
-                        <a href="{% url 'clone_recipe' recipe.pk %}" class="btn btn-success btn-sm">
-                            <i class="bi bi-plus-circle"></i> Add to My Cookbook
-                        </a>
-                        <button class="btn btn-primary btn-sm" onclick="copyShareLink()">
-                            <i class="bi bi-share"></i> Copy Share Link
+                    {% if recipe.is_public %}
+                        <button class="btn btn-light px-4 rounded-pill shadow-sm" onclick="copyShareLink()">
+                            <i class="bi bi-share me-1"></i> Share
                         </button>
                     {% endif %}
                 </div>
@@ -72,7 +74,7 @@
     function copyShareLink() {
         const url = window.location.href;
         navigator.clipboard.writeText(url).then(() => {
-            alert("Share link copied to clipboard!");
+            alert("Share link copied! Anyone with this link can now view your recipe.");
         });
     }
 </script>
@@ -81,78 +83,104 @@
     <div class="row g-5">
         
         <div class="col-lg-4">
-            <div class="card shadow-sm border-0 mb-4 overflow-hidden">
+            <div class="card shadow border-0 mb-4 overflow-hidden rounded-4">
                 {% if recipe.image %}
-                    <img src="{{ recipe.image.url }}" class="img-fluid w-100" alt="{{ recipe.title }}" style="max-height: 400px; object-fit: cover;">
+                    <img src="{{ recipe.image.url }}" class="img-fluid w-100" alt="{{ recipe.title }}" style="max-height: 500px; object-fit: cover;">
                 {% else %}
-                    <div class="bg-light text-center py-5">
-                        <i class="bi bi-camera-fill display-1 text-muted opacity-25"></i>
-                        <p class="text-muted mt-2">No photo available</p>
+                    <div class="bg-light text-center py-5 border-bottom">
+                        <i class="bi bi-camera-fill display-1 text-muted opacity-10"></i>
+                        <p class="text-muted mt-2">No photo uploaded</p>
                     </div>
+                {% endif %}
+                
+                {% if recipe.source_url %}
+                <div class="card-footer bg-white p-3 border-0 text-center">
+                    <a href="{{ recipe.source_url }}" target="_blank" class="text-decoration-none text-muted small">
+                        <i class="bi bi-box-arrow-up-right me-1"></i> Viewed on original website
+                    </a>
+                </div>
                 {% endif %}
             </div>
 
-            <div class="card shadow-sm border-0 bg-light">
-                <div class="card-body">
-                    <h4 class="fw-bold mb-3 text-success"><i class="bi bi-basket"></i> Ingredients</h4>
-                    <ul class="list-group list-group-flush bg-transparent">
-                        {# Split ingredients by newlines so they render as a clean list #}
+            <div class="card shadow-sm border-0 bg-white rounded-4 overflow-hidden">
+                <div class="bg-success bg-opacity-10 p-4 border-bottom border-success border-opacity-10">
+                    <h4 class="fw-bold mb-0 text-success"><i class="bi bi-basket2-fill me-2"></i> Ingredients</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="list-group list-group-flush bg-transparent">
                         {% for ingredient in recipe.ingredients.splitlines %}
                             {% if ingredient|length > 1 %}
-                            <li class="list-group-item bg-transparent px-0 d-flex gap-2">
-                                <input class="form-check-input flex-shrink-0" type="checkbox" id="ing-{{ forloop.counter }}">
-                                <label class="form-check-label" for="ing-{{ forloop.counter }}" style="cursor: pointer;">
-                                    {{ ingredient }}
-                                </label>
-                            </li>
+                            <label class="list-group-item bg-transparent px-0 border-0 d-flex gap-3 py-2 cursor-pointer">
+                                <input class="form-check-input flex-shrink-0 border-2" type="checkbox">
+                                <span class="ingredient-text">{{ ingredient }}</span>
+                            </label>
                             {% endif %}
                         {% endfor %}
-                    </ul>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-8">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h3 class="fw-bold text-dark mb-0">Instructions</h3>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold text-dark mb-0 d-flex align-items-center">
+                    <span class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; font-size: 0.8em;">
+                        <i class="bi bi-list-ol"></i>
+                    </span>
+                    Cooking Steps
+                </h3>
                 
-                <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="wakeLockToggle">
-                    <label class="form-check-label small text-muted" for="wakeLockToggle">Keep Screen On</label>
+                <div class="form-check form-switch bg-light p-2 px-3 rounded-pill border">
+                    <input class="form-check-input ms-0 me-2" type="checkbox" id="wakeLockToggle">
+                    <label class="form-check-label small fw-bold text-muted" for="wakeLockToggle">Keep Screen On</label>
                 </div>
             </div>
 
-            <div class="card shadow-sm border-0 p-4">
-                <div class="card-body typography-fix">
-                    {# Use linebreaks to preserve formatting from the database #}
-                    {{ recipe.instructions|linebreaks }}
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+                <div class="card-body p-4 p-md-5">
+                    <div class="instruction-content">
+                        {{ recipe.instructions|linebreaks }}
+                    </div>
                 </div>
             </div>
+
+            {% if recipe.owner.username %}
+            <div class="d-flex align-items-center gap-3 p-4 bg-light rounded-4 border-dashed">
+                <div class="bg-white p-2 rounded-circle shadow-sm">
+                    <i class="bi bi-person-fill text-muted fs-4"></i>
+                </div>
+                <div>
+                    <p class="mb-0 small text-muted">A creation by</p>
+                    <p class="mb-0 fw-bold">{{ recipe.owner.username }}</p>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
 <style>
-    .typography-fix { font-size: 1.1rem; line-height: 1.8; color: #444; }
+    .instruction-content { font-size: 1.2rem; line-height: 1.9; color: #333; }
+    .instruction-content p { margin-bottom: 1.5rem; }
     .z-index-1 { z-index: 1; }
-    /* Checkbox strikethrough effect */
-    .form-check-input:checked + label { text-decoration: line-through; color: #adb5bd; }
+    .cursor-pointer { cursor: pointer; }
+    .ingredient-text { transition: all 0.2s; border-bottom: 1px solid transparent; }
+    .form-check-input:checked + .ingredient-text { 
+        text-decoration: line-through; 
+        color: #adb5bd; 
+        opacity: 0.6;
+    }
+    .border-dashed { border: 2px dashed #dee2e6; }
 </style>
 
 <script>
-    /**
-     * GEOMETRIC ANIMATION SCRIPT
-     * Creates a floating constellation effect
-     */
+    // GEOMETRIC ANIMATION
     document.addEventListener('DOMContentLoaded', () => {
         const canvas = document.getElementById('geo-canvas');
+        if (!canvas) return;
         const ctx = canvas.getContext('2d');
-        let width, height;
-        let points = [];
-        const pointCount = 40; // Adjust for density
-        const connectionDistance = 150;
-
-        // Resize handling
+        let width, height, points = [];
+        
         function resize() {
             width = canvas.width = canvas.parentElement.offsetWidth;
             height = canvas.height = canvas.parentElement.offsetHeight;
@@ -160,87 +188,54 @@
         window.addEventListener('resize', resize);
         resize();
 
-        // Point Class
         class Point {
             constructor() {
                 this.x = Math.random() * width;
                 this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 0.5; // Velocity X
-                this.vy = (Math.random() - 0.5) * 0.5; // Velocity Y
-                this.size = Math.random() * 2 + 1;
+                this.vx = (Math.random() - 0.5) * 0.4;
+                this.vy = (Math.random() - 0.5) * 0.4;
             }
             update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                // Bounce off edges
+                this.x += this.vx; this.y += this.vy;
                 if (this.x < 0 || this.x > width) this.vx *= -1;
                 if (this.y < 0 || this.y > height) this.vy *= -1;
             }
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                ctx.fill();
-            }
         }
 
-        // Initialize points
-        for (let i = 0; i < pointCount; i++) points.push(new Point());
+        for (let i = 0; i < 30; i++) points.push(new Point());
 
-        // Animation Loop
         function animate() {
             ctx.clearRect(0, 0, width, height);
-            
-            // Draw connections first
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.beginPath();
             for (let i = 0; i < points.length; i++) {
                 for (let j = i + 1; j < points.length; j++) {
-                    const dx = points[i].x - points[j].x;
-                    const dy = points[i].y - points[j].y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (dist < connectionDistance) {
-                        ctx.beginPath();
+                    const d = Math.hypot(points[i].x - points[j].x, points[i].y - points[j].y);
+                    if (d < 150) {
                         ctx.moveTo(points[i].x, points[i].y);
                         ctx.lineTo(points[j].x, points[j].y);
-                        ctx.stroke();
                     }
                 }
             }
-
-            // Update and draw points
-            points.forEach(point => {
-                point.update();
-                point.draw();
-            });
-
+            ctx.stroke();
+            points.forEach(p => p.update());
             requestAnimationFrame(animate);
         }
         animate();
 
-        /**
-         * WAKE LOCK SCRIPT (Prevents phone from sleeping while cooking)
-         */
+        // Wake Lock
         const wakeLockToggle = document.getElementById('wakeLockToggle');
         let wakeLock = null;
-
-        wakeLockToggle.addEventListener('change', async () => {
-            if (wakeLockToggle.checked) {
-                try {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                } catch (err) {
-                    console.log(`${err.name}, ${err.message}`);
-                    wakeLockToggle.checked = false; // Reset if failed
+        if (wakeLockToggle) {
+            wakeLockToggle.addEventListener('change', async () => {
+                if (wakeLockToggle.checked) {
+                    try { wakeLock = await navigator.wakeLock.request('screen'); }
+                    catch (err) { wakeLockToggle.checked = false; }
+                } else if (wakeLock) {
+                    wakeLock.release(); wakeLock = null;
                 }
-            } else {
-                if (wakeLock !== null) {
-                    wakeLock.release();
-                    wakeLock = null;
-                }
-            }
-        });
+            });
+        }
     });
 </script>
-
 {% endblock %}
