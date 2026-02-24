@@ -4,6 +4,7 @@ from recipes.models import Recipe  # Ensure this import works
 
 class ShoppingList(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    collaborators = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='shared_shopping_lists')
     # NEW: Allow users to name their list (e.g., "Sunday Dinner")
     title = models.CharField(max_length=100, default="My Shopping List") 
     created_at = models.DateTimeField(auto_now_add=True)

@@ -10,7 +10,8 @@ from .forms import ShoppingListForm, ShoppingItemForm
 # 1. The Page You See
 @login_required
 def shopping_list_detail(request, pk):
-    shopping_list = get_object_or_404(ShoppingList, pk=pk, user=request.user)
+    from django.db.models import Q
+    shopping_list = get_object_or_404(ShoppingList, Q(pk=pk) & (Q(user=request.user) | Q(collaborators=request.user)))
     
     # Separate items so we can show "To Buy" and "Done" separately if we want
     # or just list them all.
@@ -29,8 +30,12 @@ def shopping_list_detail(request, pk):
 @login_required
 @require_POST
 def toggle_item(request, item_id):
-    # Get the item, ensuring it belongs to a list owned by the current user
-    item = get_object_or_404(ShoppingItem, pk=item_id, shopping_list__user=request.user)
+    # Get the item, ensuring it belongs to a list owned or shared with the current user
+    from django.db.models import Q
+    item = get_object_or_404(
+        ShoppingItem, 
+        Q(pk=item_id) & (Q(shopping_list__user=request.user) | Q(shopping_list__collaborators=request.user))
+    )
     
     # Flip the status
     item.checked = not item.checked
@@ -126,7 +131,8 @@ def shopping_list_edit(request, pk):
 @login_required
 @require_POST
 def add_item(request, pk):
-    shopping_list = get_object_or_404(ShoppingList, pk=pk, user=request.user)
+    from django.db.models import Q
+    shopping_list = get_object_or_404(ShoppingList, Q(pk=pk) & (Q(user=request.user) | Q(collaborators=request.user)))
     form = ShoppingItemForm(request.POST)
     
     if form.is_valid():
@@ -144,11 +150,47 @@ def add_item(request, pk):
 @login_required
 @require_POST
 def delete_item(request, item_id):
-    # Get the item, ensuring it belongs to a list owned by the current user
-    item = get_object_or_404(ShoppingItem, pk=item_id, shopping_list__user=request.user)
+    # Get the item, ensuring it belongs to a list owned or shared with the current user
+    from django.db.models import Q
+    item = get_object_or_404(
+        ShoppingItem, 
+        Q(pk=item_id) & (Q(shopping_list__user=request.user) | Q(shopping_list__collaborators=request.user))
+    )
     
     # Delete the item
     item.delete()
     
     # Return success to JavaScript
     return JsonResponse({'status': 'success'})
+
+@login_required
+def manage_collaborators(request, pk):
+    shopping_list = get_object_or_404(ShoppingList, pk=pk, user=request.user)
+    
+    if request.method == "POST":
+        action = request.POST.get('action')
+        username = request.POST.get('username')
+        from users.models import CustomUser
+        
+        if action == "add":
+            try:
+                user_to_add = CustomUser.objects.get(username=username)
+                if user_to_add == request.user:
+                    messages.warning(request, "You are already the owner!")
+                else:
+                    shopping_list.collaborators.add(user_to_add)
+                    messages.success(request, f"Added {username} as a collaborator.")
+            except CustomUser.DoesNotExist:
+                messages.error(request, f"User '{username}' not found.")
+        
+        elif action == "remove":
+            try:
+                user_to_remove = CustomUser.objects.get(username=username)
+                shopping_list.collaborators.remove(user_to_remove)
+                messages.success(request, f"Removed {username} from collaborators.")
+            except CustomUser.DoesNotExist:
+                pass
+                
+        return redirect('shopping_list_detail', pk=pk)
+    
+    return redirect('shopping_list_detail', pk=pk)

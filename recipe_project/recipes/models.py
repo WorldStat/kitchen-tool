@@ -9,6 +9,7 @@ class Recipe(models.Model):
     servings = models.IntegerField(default=1)
     image = models.ImageField(upload_to='recipe_photos/', null=True, blank=True)
     source_url = models.URLField(max_length=500, null=True, blank=True)
+    is_public = models.BooleanField(default=False)
     
     # ADD THESE TWO LINES:
     created_at = models.DateTimeField(auto_now_add=True)

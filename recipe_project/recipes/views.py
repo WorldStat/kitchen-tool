@@ -22,10 +22,13 @@ def recipe_list(request):
     recipes = Recipe.objects.filter(owner=request.user)
     return render(request, 'recipes/recipe_list.html', {'recipes': recipes})
 
-@login_required
 def recipe_detail(request, pk):
-    # Ensure users can only see their own recipes
-    recipe = get_object_or_404(Recipe, pk=pk, owner=request.user)
+    # Allow viewing if public OR if the current user is the owner
+    from django.db.models import Q
+    if request.user.is_authenticated:
+        recipe = get_object_or_404(Recipe, Q(pk=pk) & (Q(owner=request.user) | Q(is_public=True)))
+    else:
+        recipe = get_object_or_404(Recipe, pk=pk, is_public=True)
     return render(request, 'recipes/recipe_detail.html', {'recipe': recipe})
 
 login_required
@@ -107,3 +110,25 @@ def recipe_delete(request, pk):
         return redirect('recipe_list')
     
     return render(request, 'recipes/confirm_delete.html', {'object': recipe})
+
+@login_required
+def clone_recipe(request, pk):
+    recipe = get_object_or_404(Recipe, pk=pk, is_public=True)
+    
+    if recipe.owner == request.user:
+        messages.info(request, "This recipe is already in your cookbook!")
+        return redirect('recipe_detail', pk=pk)
+    
+    # Create a copy
+    new_recipe = Recipe.objects.create(
+        owner=request.user,
+        title=f"{recipe.title} (Copy)",
+        ingredients=recipe.ingredients,
+        instructions=recipe.instructions,
+        servings=recipe.servings,
+        image=recipe.image,
+        source_url=recipe.source_url
+    )
+    
+    messages.success(request, f"'{recipe.title}' has been added to your cookbook!")
+    return redirect('recipe_detail', pk=new_recipe.pk)
