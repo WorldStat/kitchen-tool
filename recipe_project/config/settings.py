@@ -85,10 +85,14 @@ USE_S3 = config('USE_S3', default=False, cast=bool)
 if USE_S3:
     # AWS Settings (Boto3 will find IAM Role credentials on EC2)
     AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
-    AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='us-east-1')
+    AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='ca-central-1')
     AWS_S3_SIGNATURE_VERSION = 's3v4'
     AWS_DEFAULT_ACL = None
     AWS_S3_FILE_OVERWRITE = False
+    AWS_S3_VERIFY = True
+    
+    # Debugging (Check server logs/Gunicorn logs)
+    print(f"DEBUG: S3 Enabled. Bucket: {AWS_STORAGE_BUCKET_NAME}, Region: {AWS_S3_REGION_NAME}")
     
     # URL construction
     AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
