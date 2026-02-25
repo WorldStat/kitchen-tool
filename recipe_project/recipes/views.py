@@ -1,19 +1,14 @@
-import json
-import boto3
-import requests
+import json, boto3, requests, re
 from bs4 import BeautifulSoup
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
 from .models import Recipe
 from .forms import RecipeForm
 
-# --- 1. THE AI AUTO-FILL LOGIC (AWS BEDROCK) ---
-
 @login_required
-@require_http_methods(["GET"])
 def scrape_recipe_api(request):
+    """The Bedrock-powered scraper."""
     target_url = request.GET.get('url')
     if not target_url:
         return JsonResponse({'error': 'No URL provided'}, status=400)
@@ -22,15 +17,19 @@ def scrape_recipe_api(request):
         # 1. Scrape & Clean
         res = requests.get(target_url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
         soup = BeautifulSoup(res.content, 'html.parser')
-        for tag in soup(["script", "style", "nav", "footer", "header"]): tag.decompose()
+        for tag in soup(["script", "style", "nav", "footer", "header", "aside"]): 
+            tag.decompose()
         text_content = soup.get_text(separator=' ', strip=True)[:15000]
 
-        # 2. Bedrock Converse API
-        client = boto3.client('bedrock-runtime', region_name='us-east-1')
+        # 2. Bedrock Converse API Call
+        client = boto3.client('bedrock-runtime', region_name='ca-central-1')
         model_id = "anthropic.claude-3-5-haiku-20241022-v1:0"
         
-        system_prompt = "Return ONLY a raw JSON object with keys: title, ingredients, instructions. No markdown."
-        messages = [{"role": "user", "content": [{"text": f"Extract: {text_content}"}]}]
+        system_prompt = (
+            "You are a recipe extractor. Return ONLY a raw JSON object with keys: "
+            "'title', 'ingredients', 'instructions'. No markdown backticks."
+        )
+        messages = [{"role": "user", "content": [{"text": f"Extract recipe: {text_content}"}]}]
 
         response = client.converse(
             modelId=model_id,
@@ -41,24 +40,18 @@ def scrape_recipe_api(request):
         
         raw_output = response['output']['message']['content'][0]['text']
         
-        # 3. Clean Markdown Backticks if present
+        # 3. Clean and Parse JSON safely
         clean_json_str = re.sub(r'```json|```', '', raw_output).strip()
-        return JsonResponse(json.loads(clean_json_str))
+        data = json.loads(clean_json_str)
+        return JsonResponse(data)
 
     except Exception as e:
+        # Return the error as JSON instead of crashing the server (which causes 500)
         return JsonResponse({'error': str(e)}, status=500)
 
-# --- 2. STANDARD RECIPE VIEWS ---
-
 @login_required
-def recipe_list(request):
-    """Displays all public recipes and user's own recipes."""
-    recipes = Recipe.objects.filter(is_public=True) | Recipe.objects.filter(author=request.user)
-    return render(request, 'recipes/recipe_list.html', {'recipes': recipes.distinct()})
-
-@login_required
-def add_recipe(request):
-    """Handles manual recipe creation and form submission."""
+def create_recipe(request):
+    """Standard view to add a recipe."""
     if request.method == 'POST':
         form = RecipeForm(request.POST, request.FILES)
         if form.is_valid():
@@ -68,27 +61,15 @@ def add_recipe(request):
             return redirect('recipe_list')
     else:
         form = RecipeForm()
-    
     return render(request, 'recipes/add_recipe.html', {'form': form})
 
+# Ensure these other views exist in your file as well...
 @login_required
-def edit_recipe(request, pk):
-    """Edit an existing recipe (owner only)."""
-    recipe = get_object_or_404(Recipe, pk=pk, author=request.user)
-    if request.method == 'POST':
-        form = RecipeForm(request.POST, request.FILES, instance=recipe)
-        if form.is_valid():
-            form.save()
-            return redirect('recipe_list')
-    else:
-        form = RecipeForm(instance=recipe)
-    return render(request, 'recipes/edit_recipe.html', {'form': form, 'recipe': recipe})
+def recipe_list(request):
+    recipes = Recipe.objects.filter(author=request.user)
+    return render(request, 'recipes/recipe_list.html', {'recipes': recipes})
 
 @login_required
-def delete_recipe(request, pk):
-    """Delete a recipe."""
-    recipe = get_object_or_404(Recipe, pk=pk, author=request.user)
-    if request.method == 'POST':
-        recipe.delete()
-        return redirect('recipe_list')
-    return render(request, 'recipes/delete_confirm.html', {'recipe': recipe})
+def recipe_detail(request, pk):
+    recipe = get_object_or_404(Recipe, pk=pk)
+    return render(request, 'recipes/recipe_detail.html', {'recipe': recipe})
