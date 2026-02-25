@@ -127,7 +127,7 @@ def recipe_delete(request, pk):
     if request.method == 'POST':
         recipe.delete()
         return redirect('recipe_list')
-    return render(request, 'recipes/delete_confirm.html', {'recipe': recipe})
+    return render(request, 'recipes/confirm_delete.html', {'recipe': recipe})
 
 @login_required
 def clone_recipe(request, pk):
