@@ -100,7 +100,7 @@ def create_recipe(request):
     else:
         form = RecipeForm()
     
-    return render(request, 'recipes/add_recipe.html', {'form': form})
+    return render(request, 'recipes/create.html', {'form': form})
 
 @login_required
 def recipe_detail(request, pk):
@@ -118,7 +118,7 @@ def recipe_edit(request, pk):
             return redirect('recipe_detail', pk=recipe.pk)
     else:
         form = RecipeForm(instance=recipe)
-    return render(request, 'recipes/add_recipe.html', {'form': form, 'recipe': recipe})
+    return render(request, 'recipes/create.html', {'form': form, 'recipe': recipe})
 
 @login_required
 def recipe_delete(request, pk):
