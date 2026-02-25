@@ -14,8 +14,11 @@ from .forms import RecipeForm
 # --- 1. THE MISSING VIEW (Fixed the ImportError) ---
 
 class LandingPageView(TemplateView):
-    """The main entry point for your site."""
-    template_name = "recipes/landing.html"
+    template_name = "landing.html"
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('recipe_list')
+        return super().dispatch(request, *args, **kwargs)
 
 # --- 2. AI EXTRACTION ENGINE (AWS BEDROCK in Canada) ---
 
