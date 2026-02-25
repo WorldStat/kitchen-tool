@@ -7,11 +7,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from django.views.generic import TemplateView  # Added for LandingPage
+from django.views.generic import TemplateView
 from .models import Recipe
 from .forms import RecipeForm
 
-# --- 1. THE MISSING VIEW (Fixed the ImportError) ---
+# --- 1. LANDING PAGE ---
 
 class LandingPageView(TemplateView):
     template_name = "landing.html"
@@ -20,13 +20,14 @@ class LandingPageView(TemplateView):
             return redirect('recipe_list')
         return super().dispatch(request, *args, **kwargs)
 
-# --- 2. AI EXTRACTION ENGINE (AWS BEDROCK in Canada) ---
+
+# --- 2. AI EXTRACTION ENGINE (AWS BEDROCK in ca-central-1) ---
 
 @login_required
 @require_http_methods(["GET"])
 def scrape_recipe_api(request):
     """
-    Fetches a URL, cleans it, and uses Bedrock in ca-central-1 to extract JSON.
+    Fetches a URL, cleans it, and uses Bedrock to extract JSON.
     """
     target_url = request.GET.get('url')
     if not target_url:
@@ -39,7 +40,6 @@ def scrape_recipe_api(request):
         res.raise_for_status()
 
         soup = BeautifulSoup(res.content, 'html.parser')
-        # Strip the heavy stuff
         for tag in soup(["script", "style", "nav", "footer", "header", "aside", "svg"]):
             tag.decompose()
         
@@ -77,12 +77,13 @@ def scrape_recipe_api(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
-# --- 3. RECIPE CRUD VIEWS ---
+# --- 3. RECIPE CRUD VIEWS (Updated to use 'owner') ---
 
 @login_required
 def recipe_list(request):
-    """List only the recipes belonging to the logged-in user."""
-    recipes = Recipe.objects.filter(author=request.user).order_by('-created_at')
+    """List recipes belonging to the logged-in user."""
+    # Fixed: Changed 'author' to 'owner'
+    recipes = Recipe.objects.filter(owner=request.user).order_by('-created_at')
     return render(request, 'recipes/recipe_list.html', {'recipes': recipes})
 
 @login_required
@@ -92,7 +93,8 @@ def create_recipe(request):
         form = RecipeForm(request.POST, request.FILES)
         if form.is_valid():
             recipe = form.save(commit=False)
-            recipe.author = request.user
+            # Fixed: Changed 'author' to 'owner'
+            recipe.owner = request.user
             recipe.save()
             return redirect('recipe_list')
     else:
@@ -107,7 +109,8 @@ def recipe_detail(request, pk):
 
 @login_required
 def recipe_edit(request, pk):
-    recipe = get_object_or_404(Recipe, pk=pk, author=request.user)
+    # Fixed: Changed 'author' to 'owner'
+    recipe = get_object_or_404(Recipe, pk=pk, owner=request.user)
     if request.method == 'POST':
         form = RecipeForm(request.POST, request.FILES, instance=recipe)
         if form.is_valid():
@@ -119,7 +122,8 @@ def recipe_edit(request, pk):
 
 @login_required
 def recipe_delete(request, pk):
-    recipe = get_object_or_404(Recipe, pk=pk, author=request.user)
+    # Fixed: Changed 'author' to 'owner'
+    recipe = get_object_or_404(Recipe, pk=pk, owner=request.user)
     if request.method == 'POST':
         recipe.delete()
         return redirect('recipe_list')
@@ -127,9 +131,12 @@ def recipe_delete(request, pk):
 
 @login_required
 def clone_recipe(request, pk):
-    original = get_object_or_404(Recipe, pk=pk, author=request.user)
+    # Fixed: Changed 'author' to 'owner'
+    original = get_object_or_404(Recipe, pk=pk, owner=request.user)
+    
     cloned = original
     cloned.pk = None 
     cloned.title = f"Copy of {original.title}"
     cloned.save()
+    
     return redirect('recipe_edit', pk=cloned.pk)
