@@ -89,18 +89,51 @@ def recipe_list(request):
 @login_required
 def create_recipe(request):
     """Handles new recipe creation."""
+    initial_data = {}
+    import_url = request.GET.get('import_url', '')
+
+    # 1. THE SCRAPER LOGIC (Premium Feature)
+    if import_url:
+        if request.user.is_paid_customer:
+            try:
+                # Assuming scrape_me() returns a dictionary-like object with title, ingredients, etc.
+                scraper = scrape_me(import_url)
+                initial_data = {
+                    'title': scraper.title(),
+                    'ingredients': '\n'.join(scraper.ingredients()),
+                    'instructions': scraper.instructions(),
+                    'servings': scraper.yields(),
+                    'source_url': import_url # Keep the link for reference
+                }
+                messages.info(request, "Data imported! You can now add a photo and save.")
+            except Exception as e:
+                messages.error(request, f"Could not scrape this site. You can still enter it manually! Error: {e}")
+        else:
+            messages.warning(request, "Web import is a Premium feature. Please upgrade to use it.")
+            import_url = '' # Clear the URL to prevent re-attempt if not paid
+
+    # 2. THE SAVE LOGIC
     if request.method == 'POST':
         form = RecipeForm(request.POST, request.FILES)
         if form.is_valid():
             recipe = form.save(commit=False)
-            # Fixed: Changed 'author' to 'owner'
             recipe.owner = request.user
+            
+            # Image Check (Premium Feature)
+            if recipe.image and not request.user.is_paid_customer:
+                recipe.image = None # Discard image if not a paid customer
+                messages.warning(request, "Photos are a Premium feature. Recipe saved without image.")
+            
             recipe.save()
+            messages.success(request, "Recipe added to your cookbook!")
             return redirect('recipe_list')
+        else:
+            messages.error(request, f"Error saving recipe. Please check the fields below. {form.errors}")
     else:
-        form = RecipeForm()
+        # Pre-fill the form with scraped data if it exists
+        form = RecipeForm(initial=initial_data)
     
-    return render(request, 'recipes/create.html', {'form': form})
+    return render(request, 'recipes/create.html', {'form': form, 'import_url': import_url})
 
 @login_required
 def recipe_detail(request, pk):
@@ -109,16 +142,27 @@ def recipe_detail(request, pk):
 
 @login_required
 def recipe_edit(request, pk):
-    # Fixed: Changed 'author' to 'owner'
     recipe = get_object_or_404(Recipe, pk=pk, owner=request.user)
     if request.method == 'POST':
         form = RecipeForm(request.POST, request.FILES, instance=recipe)
         if form.is_valid():
-            form.save()
+            edited_recipe = form.save(commit=False)
+            
+            # Image Check (Premium Feature)
+            if edited_recipe.image and not request.user.is_paid_customer:
+                # Compare current image with the one from the database
+                if edited_recipe.image != recipe.image: 
+                    edited_recipe.image = recipe.image  # Revert to original image
+                    messages.warning(request, "Photos are a Premium feature. Image change ignored.")
+            
+            edited_recipe.save()
+            messages.success(request, "Recipe updated successfully!")
             return redirect('recipe_detail', pk=recipe.pk)
+        else:
+            messages.error(request, f"Error updating recipe. Please check the fields below. {form.errors}")
     else:
         form = RecipeForm(instance=recipe)
-    return render(request, 'recipes/create.html', {'form': form, 'recipe': recipe})
+    return render(request, 'recipes/create.html', {'form': form, 'recipe': recipe, 'editing': True})
 
 @login_required
 def recipe_delete(request, pk):
