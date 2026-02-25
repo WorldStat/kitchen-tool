@@ -7,10 +7,17 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from django.views.generic import TemplateView  # Added for LandingPage
 from .models import Recipe
 from .forms import RecipeForm
 
-# --- 1. AI EXTRACTION ENGINE (AWS BEDROCK) ---
+# --- 1. THE MISSING VIEW (Fixed the ImportError) ---
+
+class LandingPageView(TemplateView):
+    """The main entry point for your site."""
+    template_name = "recipes/landing.html"
+
+# --- 2. AI EXTRACTION ENGINE (AWS BEDROCK in Canada) ---
 
 @login_required
 @require_http_methods(["GET"])
@@ -29,27 +36,25 @@ def scrape_recipe_api(request):
         res.raise_for_status()
 
         soup = BeautifulSoup(res.content, 'html.parser')
+        # Strip the heavy stuff
         for tag in soup(["script", "style", "nav", "footer", "header", "aside", "svg"]):
             tag.decompose()
         
-        # Extract text content (limit to 15,000 characters for cost efficiency)
         text_content = soup.get_text(separator=' ', strip=True)[:15000]
 
         # Initialize Bedrock Client for Canada Central
-        # Note: Ensure your IAM policy allows 'bedrock:InvokeModel'
         client = boto3.client('bedrock-runtime', region_name='ca-central-1')
 
-        # Model: Claude 3.5 Haiku (Standard ID for 2026)
+        # Model: Claude 3.5 Haiku
         model_id = "anthropic.claude-3-5-haiku-20241022-v1:0"
         
         system_prompt = (
             "You are a recipe data extractor. Return ONLY a raw JSON object with keys: "
-            "'title', 'ingredients', 'instructions'. Do not include markdown backticks or text."
+            "'title', 'ingredients', 'instructions'. Do not include markdown backticks."
         )
         
         messages = [{"role": "user", "content": [{"text": f"Extract: {text_content}"}]}]
 
-        # Using the Converse API (Unified Standard)
         response = client.converse(
             modelId=model_id,
             messages=messages,
@@ -59,7 +64,7 @@ def scrape_recipe_api(request):
         
         ai_response_text = response['output']['message']['content'][0]['text']
         
-        # Regex safety: Strips ```json ... ``` blocks if the AI accidentally adds them
+        # Strip potential markdown backticks
         clean_json_str = re.sub(r'```json|```', '', ai_response_text).strip()
         recipe_data = json.loads(clean_json_str)
 
@@ -69,7 +74,7 @@ def scrape_recipe_api(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
-# --- 2. RECIPE CRUD VIEWS ---
+# --- 3. RECIPE CRUD VIEWS ---
 
 @login_required
 def recipe_list(request):
@@ -79,7 +84,7 @@ def recipe_list(request):
 
 @login_required
 def create_recipe(request):
-    """Handles new recipe creation (manual or via Auto-Fill)."""
+    """Handles new recipe creation."""
     if request.method == 'POST':
         form = RecipeForm(request.POST, request.FILES)
         if form.is_valid():
@@ -94,13 +99,11 @@ def create_recipe(request):
 
 @login_required
 def recipe_detail(request, pk):
-    """View a single recipe."""
     recipe = get_object_or_404(Recipe, pk=pk)
     return render(request, 'recipes/recipe_detail.html', {'recipe': recipe})
 
 @login_required
 def recipe_edit(request, pk):
-    """Update an existing recipe (Owner only)."""
     recipe = get_object_or_404(Recipe, pk=pk, author=request.user)
     if request.method == 'POST':
         form = RecipeForm(request.POST, request.FILES, instance=recipe)
@@ -109,12 +112,10 @@ def recipe_edit(request, pk):
             return redirect('recipe_detail', pk=recipe.pk)
     else:
         form = RecipeForm(instance=recipe)
-    
     return render(request, 'recipes/add_recipe.html', {'form': form, 'recipe': recipe})
 
 @login_required
 def recipe_delete(request, pk):
-    """Delete a recipe (Owner only)."""
     recipe = get_object_or_404(Recipe, pk=pk, author=request.user)
     if request.method == 'POST':
         recipe.delete()
@@ -123,13 +124,9 @@ def recipe_delete(request, pk):
 
 @login_required
 def clone_recipe(request, pk):
-    """Creates a copy of an existing recipe for quick editing."""
     original = get_object_or_404(Recipe, pk=pk, author=request.user)
-    
-    # Create a copy by setting pk to None
     cloned = original
     cloned.pk = None 
     cloned.title = f"Copy of {original.title}"
     cloned.save()
-    
     return redirect('recipe_edit', pk=cloned.pk)
