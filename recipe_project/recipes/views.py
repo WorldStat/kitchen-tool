@@ -1,127 +1,94 @@
+import json
+import boto3
+import requests
+from bs4 import BeautifulSoup
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.views.generic import TemplateView
-from django.contrib import messages
-from recipe_scrapers import scrape_me
-from django.db.models import Q
-
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 from .models import Recipe
 from .forms import RecipeForm
 
-class LandingPageView(TemplateView):
-    template_name = "landing.html"
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return redirect('recipe_list')
-        return super().dispatch(request, *args, **kwargs)
+# --- 1. THE AI AUTO-FILL LOGIC (AWS BEDROCK) ---
+
+@login_required
+@require_http_methods(["GET"])
+def scrape_recipe_api(request):
+    target_url = request.GET.get('url')
+    if not target_url:
+        return JsonResponse({'error': 'No URL provided'}, status=400)
+
+    try:
+        # 1. Scrape & Clean
+        res = requests.get(target_url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
+        soup = BeautifulSoup(res.content, 'html.parser')
+        for tag in soup(["script", "style", "nav", "footer", "header"]): tag.decompose()
+        text_content = soup.get_text(separator=' ', strip=True)[:15000]
+
+        # 2. Bedrock Converse API
+        client = boto3.client('bedrock-runtime', region_name='us-east-1')
+        model_id = "anthropic.claude-3-5-haiku-20241022-v1:0"
+        
+        system_prompt = "Return ONLY a raw JSON object with keys: title, ingredients, instructions. No markdown."
+        messages = [{"role": "user", "content": [{"text": f"Extract: {text_content}"}]}]
+
+        response = client.converse(
+            modelId=model_id,
+            messages=messages,
+            system=[{"text": system_prompt}],
+            inferenceConfig={"temperature": 0}
+        )
+        
+        raw_output = response['output']['message']['content'][0]['text']
+        
+        # 3. Clean Markdown Backticks if present
+        clean_json_str = re.sub(r'```json|```', '', raw_output).strip()
+        return JsonResponse(json.loads(clean_json_str))
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+# --- 2. STANDARD RECIPE VIEWS ---
 
 @login_required
 def recipe_list(request):
-    recipes = Recipe.objects.filter(owner=request.user)
-    return render(request, 'recipes/recipe_list.html', {'recipes': recipes})
-
-def recipe_detail(request, pk):
-    # Allow viewing if public OR if the current user is the owner
-    if request.user.is_authenticated:
-        recipe = get_object_or_404(Recipe, Q(pk=pk) & (Q(owner=request.user) | Q(is_public=True)))
-    else:
-        recipe = get_object_or_404(Recipe, pk=pk, is_public=True)
-    return render(request, 'recipes/recipe_detail.html', {'recipe': recipe})
+    """Displays all public recipes and user's own recipes."""
+    recipes = Recipe.objects.filter(is_public=True) | Recipe.objects.filter(author=request.user)
+    return render(request, 'recipes/recipe_list.html', {'recipes': recipes.distinct()})
 
 @login_required
-def create_recipe(request):
-    initial_data = {}
-    import_url = request.GET.get('import_url', '')
-
-    # 1. THE SCRAPER LOGIC
-    if import_url:
-        try:
-            scraper = scrape_me(import_url)
-            initial_data = {
-                'title': scraper.title(),
-                'ingredients': '\n'.join(scraper.ingredients()),
-                'instructions': scraper.instructions(),
-                'servings': scraper.yields(),
-                'source_url': import_url
-            }
-            messages.info(request, "Data imported! You can now add a photo and save.")
-        except Exception as e:
-            messages.error(request, f"Could not scrape this site. You can still enter it manually!")
-
-    # 2. THE SAVE LOGIC
+def add_recipe(request):
+    """Handles manual recipe creation and form submission."""
     if request.method == 'POST':
         form = RecipeForm(request.POST, request.FILES)
         if form.is_valid():
             recipe = form.save(commit=False)
-            recipe.owner = request.user
+            recipe.author = request.user
             recipe.save()
-            messages.success(request, "Recipe added to your cookbook!")
             return redirect('recipe_list')
-        else:
-            messages.error(request, f"Error saving recipe: {form.errors}")
     else:
-        form = RecipeForm(initial=initial_data)
-
-    return render(request, 'recipes/create.html', {
-        'form': form,
-        'import_url': import_url
-    })
+        form = RecipeForm()
+    
+    return render(request, 'recipes/add_recipe.html', {'form': form})
 
 @login_required
-def recipe_edit(request, pk):
-    recipe = get_object_or_404(Recipe, pk=pk)
-    
-    # Security Check
-    if recipe.owner != request.user:
-        messages.error(request, "You are not allowed to edit this recipe.")
-        return redirect('recipe_list')
-
-    if request.method == "POST":
+def edit_recipe(request, pk):
+    """Edit an existing recipe (owner only)."""
+    recipe = get_object_or_404(Recipe, pk=pk, author=request.user)
+    if request.method == 'POST':
         form = RecipeForm(request.POST, request.FILES, instance=recipe)
         if form.is_valid():
             form.save()
-            messages.success(request, "Recipe updated successfully!")
-            return redirect('recipe_detail', pk=recipe.pk)
-        else:
-            messages.error(request, f"Error updating recipe: {form.errors}")
+            return redirect('recipe_list')
     else:
         form = RecipeForm(instance=recipe)
-
-    return render(request, 'recipes/create.html', {'form': form, 'editing': True})
+    return render(request, 'recipes/edit_recipe.html', {'form': form, 'recipe': recipe})
 
 @login_required
-def recipe_delete(request, pk):
-    recipe = get_object_or_404(Recipe, pk=pk)
-    
-    if recipe.owner != request.user:
-        messages.error(request, "You cannot delete this recipe.")
-        return redirect('recipe_list')
-
-    if request.method == "POST":
+def delete_recipe(request, pk):
+    """Delete a recipe."""
+    recipe = get_object_or_404(Recipe, pk=pk, author=request.user)
+    if request.method == 'POST':
         recipe.delete()
-        messages.success(request, "Recipe deleted.")
         return redirect('recipe_list')
-    
-    return render(request, 'recipes/confirm_delete.html', {'object': recipe})
-
-@login_required
-def clone_recipe(request, pk):
-    recipe = get_object_or_404(Recipe, pk=pk, is_public=True)
-    
-    if recipe.owner == request.user:
-        messages.info(request, "This recipe is already in your cookbook!")
-        return redirect('recipe_detail', pk=pk)
-    
-    # Create a copy
-    new_recipe = Recipe.objects.create(
-        owner=request.user,
-        title=f"{recipe.title} (Copy)",
-        ingredients=recipe.ingredients,
-        instructions=recipe.instructions,
-        servings=recipe.servings,
-        image=recipe.image,
-        source_url=recipe.source_url
-    )
-    
-    messages.success(request, f"'{recipe.title}' has been added to your cookbook!")
-    return redirect('recipe_detail', pk=new_recipe.pk)
+    return render(request, 'recipes/delete_confirm.html', {'recipe': recipe})

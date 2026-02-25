@@ -1,141 +1,74 @@
 {% extends 'base.html' %}
-
 {% block content %}
-<div class="bg-success bg-gradient text-white py-5 mb-5 shadow-sm" style="border-radius: 0 0 40px 40px; margin-top: -24px;">
-    <div class="container text-center">
-        <h1 class="display-4 fw-bold mb-2">{% if editing %}Edit Recipe{% else %}New Recipe{% endif %}</h1>
-        <p class="lead opacity-75">{% if editing %}Refine your masterpiece{% else %}Add a new creation to your digital cookbook{% endif %}</p>
-        <a href="{% url 'recipe_list' %}" class="btn btn-outline-light btn-sm rounded-pill mt-2">
-            <i class="bi bi-arrow-left"></i> Back to Cookbook
-        </a>
-    </div>
-</div>
-
-<div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-9">
-            
-            {% if not editing %}
-            <div class="card shadow-sm border-0 mb-5 overflow-hidden" style="border-radius: 20px;">
-                <div class="card-body p-4 bg-light border-start border-primary border-5">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="bg-primary text-white p-2 rounded-3">
-                            <i class="bi bi-magic fs-4"></i>
-                        </div>
-                        <h5 class="fw-bold mb-0 text-primary">Magic Importer</h5>
-                    </div>
-                    <p class="text-muted small">Paste a URL from any recipe website (Food.com, AllRecipes, etc.) and we'll fill out the form for you!</p>
-                    <form method="GET" class="input-group input-group-lg shadow-sm">
-                        <input type="url" name="import_url" class="form-control border-0" placeholder="https://example.com/recipe-url" value="{{ import_url }}">
-                        <button class="btn btn-primary px-4" type="submit">Import</button>
-                    </form>
-                </div>
+<div class="container py-5" style="max-width: 600px;">
+    <div class="card shadow-sm border-0 rounded-4 p-4">
+        <h2 class="fw-bold mb-4">Add New Recipe</h2>
+        
+        <div class="mb-4 p-3 bg-light rounded-3">
+            <label class="form-label fw-bold">Import from Web</label>
+            <div class="input-group">
+                <input type="url" id="importUrl" class="form-control" placeholder="Paste recipe link here...">
+                <button class="btn btn-primary fw-bold" type="button" id="magicBtn" onclick="autoFill()">
+                    <span id="btnText"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Auto-Fill</span>
+                    <span id="btnSpinner" class="spinner-border spinner-border-sm d-none"></span>
+                </button>
             </div>
-            {% endif %}
-
-            <div class="card shadow-lg border-0 mb-5" style="border-radius: 25px;">
-                <div class="card-body p-4 p-md-5">
-                    <form method="POST" enctype="multipart/form-data" novalidate>
-                        {% csrf_token %}
-
-                        <!-- Main Title -->
-                        <div class="mb-5">
-                            <label class="form-label h4 fw-bold text-dark mb-3">What are we cooking?</label>
-                            {{ form.title }}
-                            {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors }}</div>{% endif %}
-                        </div>
-
-                        <!-- Image Section -->
-                        <div class="mb-5 p-4 border rounded-4 bg-light bg-opacity-50">
-                            <label class="form-label fw-bold d-flex align-items-center gap-2 mb-3">
-                                <i class="bi bi-camera-fill text-success fs-5"></i> Recipe Photo
-                            </label>
-                            <div class="row align-items-center">
-                                <div class="col-md-4 mb-3 mb-md-0">
-                                    {% if editing and form.instance.image %}
-                                        <img src="{{ form.instance.image.url }}" class="img-fluid rounded-3 shadow-sm border" style="max-height: 150px; width: 100%; object-fit: cover;">
-                                    {% else %}
-                                        <div class="bg-white border rounded-3 d-flex align-items-center justify-content-center text-muted" style="height: 150px;">
-                                            <i class="bi bi-image display-4 opacity-25"></i>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                <div class="col-md-8">
-                                    {{ form.image }}
-                                    <div class="form-text mt-2 small">{% if not user.is_paid_customer %}<span class="badge bg-warning text-dark"><i class="bi bi-star-fill"></i> Premium</span> {% endif %}Photos make your cookbook look amazing!</div>
-                                    {% if form.image.errors %}<div class="text-danger small mt-1">{{ form.image.errors }}</div>{% endif %}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Timing & Sharing -->
-                        <div class="row g-4 mb-5">
-                            <div class="col-6 col-md-3">
-                                <div class="p-3 border rounded-3 text-center bg-white shadow-sm h-100">
-                                    <label class="form-label small fw-bold text-muted text-uppercase mb-2">Servings</label>
-                                    {{ form.servings }}
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-3 border rounded-3 text-center bg-white shadow-sm h-100">
-                                    <label class="form-label small fw-bold text-muted text-uppercase mb-2">Prep (min)</label>
-                                    {{ form.prep_time }}
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-3 border rounded-3 text-center bg-white shadow-sm h-100">
-                                    <label class="form-label small fw-bold text-muted text-uppercase mb-2">Cook (min)</label>
-                                    {{ form.cook_time }}
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-3 border rounded-3 text-center bg-white shadow-sm h-100 d-flex flex-column justify-content-center">
-                                    <label class="form-label small fw-bold text-muted text-uppercase mb-1">Public</label>
-                                    <div class="form-check form-switch d-inline-block mx-auto">
-                                        {{ form.is_public }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label h5 fw-bold text-dark"><i class="bi bi-link-45deg"></i> Source Link</label>
-                            {{ form.source_url }}
-                            <div class="form-text">Where did you find this recipe? (optional)</div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label h5 fw-bold text-dark"><i class="bi bi-list-check"></i> Ingredients</label>
-                            {{ form.ingredients }}
-                            <div class="form-text">Enter each ingredient on a new line.</div>
-                        </div>
-
-                        <div class="mb-5">
-                            <label class="form-label h5 fw-bold text-dark"><i class="bi bi-journal-text"></i> Instructions</label>
-                            {{ form.instructions }}
-                        </div>
-
-                        <hr class="my-5 opacity-10">
-
-                        <div class="d-grid gap-3 d-md-flex justify-content-md-end">
-                            <a href="{% if editing %}{% url 'recipe_detail' form.instance.pk %}{% else %}{% url 'recipe_list' %}{% endif %}" class="btn btn-link text-muted px-4 text-decoration-none">Discard Changes</a>
-                            <button type="submit" class="btn btn-success btn-lg px-5 fw-bold shadow rounded-pill">
-                                <i class="bi bi-check-lg"></i> {% if editing %}Update Recipe{% else %}Save Recipe{% endif %}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+            <small class="text-muted mt-2 d-block">AI will extract title, ingredients, and steps.</small>
         </div>
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Recipe Title</label>
+                {{ form.title }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Ingredients</label>
+                {{ form.ingredients }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Instructions</label>
+                {{ form.instructions }}
+            </div>
+            <button type="submit" class="btn btn-dark w-100 rounded-pill py-2 fw-bold">Save Recipe</button>
+        </form>
     </div>
 </div>
 
-<style>
-    .form-control:focus {
-        border-color: #2d6a4f;
-        box-shadow: 0 0 0 0.25rem rgba(45, 106, 79, 0.1);
+<script>
+async function autoFill() {
+    const url = document.getElementById('importUrl').value;
+    const btn = document.getElementById('magicBtn');
+    const text = document.getElementById('btnText');
+    const spinner = document.getElementById('btnSpinner');
+
+    if (!url) return alert("Please paste a URL first!");
+
+    // Start Loading State
+    btn.disabled = true;
+    text.classList.add('d-none');
+    spinner.classList.remove('d-none');
+
+    try {
+        const response = await fetch(`/api/scrape/?url=${encodeURIComponent(url)}`);
+        const data = await response.json();
+
+        if (data.error) throw new Error(data.error);
+
+        // Fill Form Fields (Using Django form ID naming convention)
+        document.getElementById('id_title').value = data.title || "";
+        document.getElementById('id_ingredients').value = data.ingredients || "";
+        document.getElementById('id_instructions').value = data.instructions || "";
+        
+        alert("Success! Review the fields and save.");
+    } catch (err) {
+        alert("Error: " + err.message);
+    } finally {
+        // Reset Button
+        btn.disabled = false;
+        text.classList.remove('d-none');
+        spinner.classList.add('d-none');
     }
-    textarea { min-height: 150px; }
-    .form-switch .form-check-input { width: 3em; height: 1.5em; cursor: pointer; }
-</style>
+}
+</script>
 {% endblock %}
