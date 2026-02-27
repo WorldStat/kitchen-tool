@@ -1,49 +1,88 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container pb-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold">My Cookbook</h2>
-        <span class="badge bg-secondary rounded-pill">{{ recipes.count }}</span>
+<div class="bg-success bg-gradient text-white py-5 mb-5 shadow-sm" style="border-radius: 0 0 40px 40px; margin-top: -24px;">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6 text-center text-md-start mb-4 mb-md-0">
+                <h1 class="display-4 fw-bold mb-0">My Cookbook</h1>
+                <p class="lead opacity-75">Your personal collection of culinary masterpieces</p>
+                <div class="badge bg-white text-success px-3 py-2 rounded-pill shadow-sm mt-2">
+                    <i class="bi bi-journal-bookmark-fill me-1"></i> {{ recipes.count }} Recipes
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="glass-card p-3 shadow-sm border-white border-opacity-25">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-transparent border-0 text-white"><i class="bi bi-search"></i></span>
+                        <input type="text" id="recipeSearch" class="form-control bg-transparent border-0 text-white placeholder-white" placeholder="Search your recipes...">
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
+<div class="container pb-5">
     {% if not recipes %}
-        <div class="text-center py-5 border rounded bg-white shadow-sm">
-            <p class="text-muted">No recipes found.</p>
-            <a href="{% url 'create_recipe' %}" class="btn btn-success">Add One</a>
+        <div class="text-center py-5 glass-card shadow-sm fade-in">
+            <div class="p-5">
+                <i class="bi bi-journal-plus display-1 text-muted opacity-25"></i>
+                <h3 class="mt-3 fw-bold">Your cookbook is empty</h3>
+                <p class="text-muted mb-4">Start your culinary journey by adding your first recipe!</p>
+                <a href="{% url 'create_recipe' %}" class="btn btn-success btn-lg px-5 rounded-pill shadow">
+                    <i class="bi bi-plus-lg me-2"></i> Add First Recipe
+                </a>
+            </div>
         </div>
     {% else %}
         <form method="POST" action="{% url 'generate_shopping_list' %}" id="shopping-form">
             {% csrf_token %}
             
-            <div class="row row-cols-1 row-cols-md-2 g-3">
+            <div class="row row-cols-1 row-cols-md-2 g-4" id="recipeGrid">
                 {% for recipe in recipes %}
-                <div class="col">
-                    <div class="card shadow-sm border-0 h-100 position-relative">
-                        <div class="card-body d-flex align-items-center p-2">
+                <div class="col recipe-card-wrapper" style="animation-delay: {{ forloop.counter0|add:1 }}00ms;">
+                    <div class="card glass-card border-0 h-100 shadow-sm overflow-hidden fade-in">
+                        <div class="card-body d-flex align-items-center p-3">
                             
-                            <div class="px-3 border-end">
-                                <input class="form-check-input border-success" 
-                                       type="checkbox" 
-                                       name="selected_recipes" 
-                                       value="{{ recipe.id }}" 
-                                       style="width: 1.5rem; height: 1.5rem;">
+                            <!-- Selection Logic -->
+                            <div class="pe-3 border-end border-light">
+                                <div class="form-check m-0">
+                                    <input class="form-check-input border-success shadow-none" 
+                                           type="checkbox" 
+                                           name="selected_recipes" 
+                                           id="recipe-{{ recipe.id }}"
+                                           value="{{ recipe.id }}" 
+                                           style="width: 1.8rem; height: 1.8rem; cursor: pointer;">
+                                </div>
                             </div>
                             
-                            <a href="{% url 'recipe_detail' recipe.id %}" class="flex-grow-1 d-flex align-items-center text-decoration-none text-dark ps-3 py-2">
+                            <!-- Recipe Info -->
+                            <a href="{% url 'recipe_detail' recipe.id %}" class="flex-grow-1 d-flex align-items-center text-decoration-none text-dark ps-3 py-1">
                                 <div class="flex-grow-1 me-2">
-                                    <h6 class="mb-0 fw-bold">{{ recipe.title }}</h6>
-                                    <small class="text-muted">{{ recipe.servings }} servings</small>
+                                    <h5 class="mb-1 fw-bold text-dark recipe-title">{{ recipe.title }}</h5>
+                                    <div class="d-flex gap-2">
+                                        <small class="badge bg-success bg-opacity-10 text-success rounded-pill px-2">
+                                            <i class="bi bi-people-fill me-1"></i>{{ recipe.servings }}
+                                        </small>
+                                        {% if recipe.prep_time %}
+                                        <small class="badge bg-info bg-opacity-10 text-info rounded-pill px-2">
+                                            <i class="bi bi-clock me-1"></i>{{ recipe.prep_time }}m
+                                        </small>
+                                        {% endif %}
+                                    </div>
                                 </div>
                                 
                                 {% if recipe.image %}
-                                    <img src="{{ recipe.image.url }}" class="rounded shadow-sm" style="width: 60px; height: 60px; object-fit: cover;">
+                                    <div class="recipe-thumb-container shadow-sm rounded-3">
+                                        <img src="{{ recipe.image.url }}" class="rounded-3" style="width: 70px; height: 70px; object-fit: cover;">
+                                    </div>
                                 {% else %}
-                                    <div class="rounded bg-light d-flex align-items-center justify-content-center border" style="width: 60px; height: 60px;">
-                                        <i class="bi bi-image text-muted"></i>
+                                    <div class="rounded-3 bg-light d-flex align-items-center justify-content-center border" style="width: 70px; height: 70px;">
+                                        <i class="bi bi-image text-muted opacity-50"></i>
                                     </div>
                                 {% endif %}
-                                <i class="bi bi-chevron-right ms-2 text-muted"></i>
+                                <i class="bi bi-chevron-right ms-3 text-muted opacity-50"></i>
                             </a>
 
                         </div>
@@ -52,43 +91,79 @@
                 {% endfor %}
             </div>
 
-            <div class="fixed-bottom p-3 text-center" style="bottom: 70px; z-index: 1020;">
-                <button type="submit" id="generate-btn" class="btn btn-warning btn-lg shadow-lg fw-bold px-4 rounded-pill d-none" style="border: 2px solid white;">
-                    <i class="bi bi-cart-check-fill me-2"></i> Generate List
+            <!-- Floating Action Button for Shopping List -->
+            <div class="fixed-bottom p-4 text-center fab-container" style="bottom: 80px; z-index: 1040;">
+                <button type="submit" id="generate-btn" class="btn btn-warning btn-lg shadow-lg fw-bold px-5 py-3 rounded-pill d-none animate-bounce-in" style="border: 3px solid white; font-size: 1.1rem;">
+                    <i class="bi bi-cart-check-fill me-2 fs-4"></i> Generate Shopping List
                 </button>
             </div>
         </form>
     {% endif %}
 </div>
 
+<style>
+    .placeholder-white::placeholder { color: rgba(255,255,255,0.7) !important; }
+    
+    .recipe-card-wrapper { transition: all 0.3s ease; }
+    
+    .recipe-thumb-container {
+        overflow: hidden;
+        transition: transform 0.3s ease;
+    }
+    .card:hover .recipe-thumb-container {
+        transform: scale(1.1) rotate(2deg);
+    }
+    
+    .animate-bounce-in {
+        animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    @keyframes bounceIn {
+        from { opacity: 0; transform: translateY(100px) scale(0.5); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Selection Highlighting */
+    .form-check-input:checked ~ label,
+    .form-check-input:checked {
+        background-color: var(--primary-green);
+        border-color: var(--primary-green);
+    }
+    
+    .recipe-card-wrapper:has(.form-check-input:checked) .card {
+        background-color: rgba(45, 106, 79, 0.05);
+        border: 1px solid rgba(45, 106, 79, 0.2) !important;
+        transform: scale(1.02);
+    }
+</style>
+
 <script>
-    // Show/Hide generate button based on selection
+    // 1. SEARCH LOGIC
+    document.getElementById('recipeSearch')?.addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll('.recipe-card-wrapper').forEach(card => {
+            const title = card.querySelector('.recipe-title').innerText.toLowerCase();
+            if (title.includes(term)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+
+    // 2. FAB VISIBILITY
     const checkboxes = document.querySelectorAll('input[name="selected_recipes"]');
     const generateBtn = document.getElementById('generate-btn');
 
     checkboxes.forEach(cb => {
         cb.addEventListener('change', () => {
-            const anyChecked = Array.from(checkboxes).some(c => c.checked);
-            if (anyChecked) {
+            const checkedCount = Array.from(checkboxes).filter(c => c.checked).length;
+            if (checkedCount > 0) {
                 generateBtn.classList.remove('d-none');
+                generateBtn.innerHTML = `<i class="bi bi-cart-check-fill me-2"></i> Create List (${checkedCount})`;
             } else {
                 generateBtn.classList.add('d-none');
             }
         });
     });
 </script>
-
-<style>
-    /* Prevents the card items from being hidden by the floating buttons */
-    body { padding-bottom: 150px !important; }
-    
-    /* Makes the checkbox area specifically for selection */
-    .form-check-input { cursor: pointer; }
-    
-    /* Visual feedback for clicking the recipe part */
-    a.flex-grow-1:active {
-        background-color: rgba(0,0,0,0.05);
-        border-radius: 8px;
-    }
-</style>
 {% endblock %}

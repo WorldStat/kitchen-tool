@@ -1,301 +1,72 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cook-Book | Master Your Meals</title>
-    <style>
-        /* --- DESIGN TOKENS --- */
-        :root {
-            --primary: #2d6a4f;
-            --primary-grad: linear-gradient(135deg, #2d6a4f 0%, #40916c 100%);
-            --accent: #d8f3dc;
-            --text-dark: #1f2937;
-            --white: #ffffff;
-            --glass: rgba(255, 255, 255, 0.95);
-            --nav-height: 70px;
-            --font-main: 'Inter', system-ui, -apple-system, sans-serif;
-            --shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
+{% extends 'base.html' %}
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+{% block content %}
+<div class="row align-items-center min-vh-100 position-relative overflow-hidden" style="margin-top: -100px;">
+    
+    <!-- Organic Background Elements -->
+    <div class="position-absolute top-50 start-50 translate-middle w-100 h-100" style="z-index: -1;">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="position-absolute" style="width: 60%; top: 0; left: -10%; opacity: 0.15; fill: var(--moss);">
+            <path d="M44.7,-76.4C58.1,-69.2,69.2,-58.1,76.4,-44.7C83.6,-31.3,86.9,-15.7,85.4,-0.9C83.8,13.9,77.4,27.8,69.2,40.2C61,52.6,51,63.5,38.7,71.4C26.4,79.3,13.2,84.2,-0.8,85.6C-14.8,87,-29.6,84.9,-43.3,78.1C-57,71.3,-69.6,59.8,-77.2,46.1C-84.8,32.4,-87.4,16.2,-86.4,0.6C-85.4,-15,-80.8,-30,-72.2,-43.1C-63.6,-56.2,-51,-67.4,-37.1,-74.3C-23.2,-81.2,-8.1,-83.8,3.5,-84.4C15.1,-85,31.3,-83.6,44.7,-76.4Z" transform="translate(100 100)" />
+        </svg>
+    </div>
+
+    <div class="col-lg-7 text-center text-lg-start fade-in">
+        <h1 class="display-1 fw-bold text-dark mb-4" style="line-height: 0.9; font-family: 'Playfair Display', serif;">
+            Creative <span class="text-success" style="color: var(--earth-green) !important;">People</span><br>
+            Feed the Planet.
+        </h1>
+        <p class="lead fs-3 text-muted mb-5 pe-lg-5" style="font-family: 'Outfit', sans-serif;">
+            A digital sanctuary for culinary art. Organize your cookbook, share abundance with family, and discover recipes that respect our earth.
+        </p>
         
-        body {
-            font-family: var(--font-main);
-            color: var(--text-dark);
-            background-color: var(--white);
-            overflow-x: hidden;
-        }
-
-        /* --- DYNAMIC NAVIGATION --- */
-        .navbar {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            height: var(--nav-height);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 5%;
-            z-index: 1000;
-            transition: all 0.4s ease;
-            background: transparent; /* Starts transparent */
-        }
-
-        /* State when scrolling down */
-        .navbar.scrolled {
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            box-shadow: var(--shadow);
-            height: 60px; /* Shrinks slightly */
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--primary);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Desktop Menu */
-        .nav-menu {
-            display: flex;
-            gap: 2rem;
-            align-items: center;
-        }
-
-        .nav-link {
-            text-decoration: none;
-            color: var(--text-dark);
-            font-weight: 500;
-            position: relative;
-            transition: color 0.3s;
-        }
-
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -4px;
-            left: 0;
-            background-color: var(--primary);
-            transition: width 0.3s;
-        }
-
-        .nav-link:hover { color: var(--primary); }
-        .nav-link:hover::after { width: 100%; }
-
-        /* Mobile Hamburger */
-        .hamburger {
-            display: none;
-            cursor: pointer;
-            flex-direction: column;
-            gap: 5px;
-        }
-        .bar {
-            width: 25px;
-            height: 3px;
-            background-color: var(--primary);
-            transition: 0.3s;
-            border-radius: 2px;
-        }
-
-        /* Mobile Styles */
-        @media (max-width: 768px) {
-            .hamburger { display: flex; }
-            
-            .nav-menu {
-                position: absolute;
-                top: 100%;
-                left: 0;
-                width: 100%;
-                background: var(--white);
-                flex-direction: column;
-                padding: 2rem 0;
-                gap: 1.5rem;
-                transform: translateY(-150%);
-                transition: transform 0.4s ease-in-out;
-                box-shadow: var(--shadow);
-                z-index: 999;
-            }
-
-            .nav-menu.active {
-                transform: translateY(0);
-            }
-        }
-
-        /* --- HERO SECTION --- */
-        header.hero {
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            /* Dynamic Gradient */
-            background: radial-gradient(circle at 10% 20%, rgb(233, 252, 238) 0%, rgb(255, 255, 255) 90%);
-            padding-top: var(--nav-height);
-        }
-
-        h1 {
-            font-size: clamp(2.5rem, 5vw, 4rem);
-            color: var(--primary);
-            margin-bottom: 1rem;
-            line-height: 1.1;
-        }
-
-        .subtitle {
-            font-size: 1.2rem;
-            color: #555;
-            max-width: 600px;
-            margin: 0 auto 2rem;
-        }
-
-        /* --- BUTTONS --- */
-        .btn {
-            padding: 12px 30px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: transform 0.1s;
-            display: inline-block;
-        }
-        .btn:active { transform: scale(0.95); }
-
-        .btn-primary {
-            background: var(--primary-grad);
-            color: var(--white);
-            box-shadow: 0 4px 15px rgba(45, 106, 79, 0.3);
-        }
-        
-        .btn-outline {
-            border: 2px solid var(--primary);
-            color: var(--primary);
-            margin-left: 10px;
-        }
-
-        /* --- SECTION STYLES --- */
-        section { padding: 80px 20px; text-align: center; }
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            max-width: 1100px;
-            margin: 3rem auto 0;
-        }
-        .card {
-            background: white;
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-            transition: transform 0.3s;
-        }
-        .card:hover { transform: translateY(-5px); }
-
-    </style>
-</head>
-<body>
-
-    <nav class="navbar" id="navbar">
-        <a href="{% url 'landing_page' %}" class="logo">
-            <span>🥗</span> Cook-Book
-        </a>
-        
-        <div class="hamburger" id="hamburger">
-            <span class="bar"></span>
-            <span class="bar"></span>
-            <span class="bar"></span>
+        <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start">
+            <a href="{% url 'register' %}" class="btn-earth fs-4 shadow-lg text-decoration-none text-center">Join the Movement</a>
+            <a href="{% url 'community_cookbook' %}" class="btn btn-outline-dark border-2 rounded-pill px-4 py-3 fs-5">Explore Public Recipes</a>
         </div>
+    </div>
 
-        <div class="nav-menu" id="nav-menu">
-            <a href="#features" class="nav-link">Features</a>
-            <a href="#community" class="nav-link">Farmers</a>
-            
-            <a href="{% url 'login' %}" class="nav-link">Sign In</a>
-            <a href="{% url 'register' %}" class="btn btn-primary" style="margin-left: 10px; color: white;">Get Started</a>
-        </div>
-    </nav>
-
-    <header class="hero">
-        <div class="container">
-            <h1>Cook Smarter,<br>Not Harder.</h1>
-            <p class="subtitle">
-                The all-in-one kitchen operating system. Save recipes, auto-generate shopping lists, and help local farmers grow what you actually eat.
-            </p>
-            <div>
-                <a href="{% url 'register' %}" class="btn btn-primary">Start for Free</a>
-                <a href="#features" class="btn btn-outline">Learn More</a>
+    <div class="col-lg-5 mt-5 mt-lg-0 fade-in" style="animation-delay: 0.3s;">
+        <div class="natural-glass p-3 overflow-hidden shadow-2xl">
+            <div class="bg-white rounded-4 overflow-hidden position-relative" style="height: 500px;">
+                <img src="https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&w=1000" class="w-100 h-100 object-fit-cover" alt="Organic cooking">
+                <div class="position-absolute bottom-0 start-0 w-100 p-4 bg-dark bg-opacity-25 text-white" style="backdrop-filter: blur(5px);">
+                    <h4 class="fw-bold mb-0">Seasonal Garden Harvest</h4>
+                    <p class="small opacity-75 mb-0">Plan. Shop. Cook. Respect.</p>
+                </div>
             </div>
         </div>
-    </header>
+    </div>
+</div>
 
-    <section id="features">
-        <h2>Why Cook-Book?</h2>
-        <div class="feature-grid">
-            <div class="card">
-                <h3>⚡ Batch Prep</h3>
-                <p>Combine ingredients across recipes. Prep once on Sunday, eat all week.</p>
-            </div>
-            <div class="card">
-                <h3>🚜 Local Loop</h3>
-                <p>We share aggregate demand data with local farmers so they grow what you need.</p>
-            </div>
-            <div class="card">
-                <h3>👨‍👩‍👧‍👦 Easy Share</h3>
-                <p>Sync shopping lists with your spouse or roommates instantly.</p>
-            </div>
+<!-- Features Redesign -->
+<div class="row g-4 py-5 mb-5">
+    <div class="col-md-4">
+        <div class="natural-glass p-5 h-100">
+            <div class="display-4 text-success mb-3">🌱</div>
+            <h3 class="fw-bold">AI Magic Importer</h3>
+            <p class="text-muted">Instantly save any recipe from the web. Our AI preserves quantities and cleans the formatting for you.</p>
         </div>
-    </section>
+    </div>
+    <div class="col-md-4">
+        <div class="natural-glass p-5 h-100">
+            <div class="display-4 text-danger mb-3">🤝</div>
+            <h3 class="fw-bold">Family Collaboration</h3>
+            <p class="text-muted">Shared shopping lists that sync in real-time. Invite your partner or roommates to co-create your meals.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="natural-glass p-5 h-100">
+            <div class="display-4 text-warning mb-3">✨</div>
+            <h3 class="fw-bold">Artistic Interface</h3>
+            <p class="text-muted">A natural, flowing design that stays out of your way and lets your creativity shine in the kitchen.</p>
+        </div>
+    </div>
+</div>
 
-    <footer style="background: var(--primary); color: white; padding: 40px; text-align: center; margin-top: 50px;">
-        <p>&copy; {% now "Y" %} Cook-Book. Made with care.</p>
-    </footer>
-
-    <script>
-        // 1. MOBILE MENU TOGGLE
-        const hamburger = document.getElementById('hamburger');
-        const navMenu = document.getElementById('nav-menu');
-
-        hamburger.addEventListener('click', () => {
-            navMenu.classList.toggle('active');
-            
-            // Animate hamburger bars to X shape (Optional polish)
-            const bars = document.querySelectorAll('.bar');
-            if(navMenu.classList.contains('active')){
-                bars[0].style.transform = 'rotate(45deg) translate(5px, 6px)';
-                bars[1].style.opacity = '0';
-                bars[2].style.transform = 'rotate(-45deg) translate(5px, -6px)';
-            } else {
-                bars[0].style.transform = 'none';
-                bars[1].style.opacity = '1';
-                bars[2].style.transform = 'none';
-            }
-        });
-
-        // Close menu when clicking a link
-        document.querySelectorAll('.nav-link').forEach(n => n.addEventListener('click', () => {
-            navMenu.classList.remove('active');
-            // Reset hamburger
-            const bars = document.querySelectorAll('.bar');
-            bars[0].style.transform = 'none';
-            bars[1].style.opacity = '1';
-            bars[2].style.transform = 'none';
-        }));
-
-        // 2. SCROLL EFFECT
-        // Adds background color when user scrolls down
-        window.addEventListener('scroll', () => {
-            const navbar = document.getElementById('navbar');
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
-        });
-    </script>
-</body>
-</html>
+<style>
+    .shadow-2xl {
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;600&display=swap');
+</style>
+{% endblock %}
