@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from .models import ShoppingList, ShoppingItem
+from recipes.models import Recipe
 from django.contrib import messages
 from .forms import ShoppingListForm, ShoppingItemForm
 
