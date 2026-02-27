@@ -22,26 +22,31 @@
                         <div class="bg-primary text-white p-2 rounded-3">
                             <i class="bi bi-magic fs-4"></i>
                         </div>
-                        <h5 class="fw-bold mb-0 text-primary">Magic Importer</h5>
+                        <h5 class="fw-bold mb-0 text-primary">Magic AI Importer</h5>
                     </div>
-                    {% if user.is_authenticated and user.is_paid_customer %}
-                        <p class="text-muted small">Paste a URL from any recipe website (Food.com, AllRecipes, etc.) and we'll fill out the form for you!</p>
-                        <form method="GET" class="input-group input-group-lg shadow-sm">
-                            <input type="url" name="import_url" class="form-control border-0" placeholder="https://example.com/recipe-url" value="{{ import_url }}">
-                            <button class="btn btn-primary px-4" type="submit">Import</button>
-                        </form>
-                    {% else %}
-                        <p class="text-muted small">Unlock this feature to automatically import recipes from your favorite websites!</p>
-                        <a href="#" class="btn btn-primary btn-sm rounded-pill">Upgrade to Premium</a>
-                    {% endif %}
+                    <p class="text-muted small">Paste a URL from any recipe website and our AI will fill out the form for you!</p>
+                    <form id="importForm" method="GET" class="input-group input-group-lg shadow-sm">
+                        <input type="url" name="import_url" class="form-control border-0" placeholder="https://example.com/recipe-url" value="{{ import_url }}" required>
+                        <button class="btn btn-primary px-4" type="submit" id="importBtn">
+                            <span id="importText">Import</span>
+                            <span id="importSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        </button>
+                    </form>
                 </div>
             </div>
             {% endif %}
 
             <div class="card shadow-lg border-0 mb-5" style="border-radius: 25px;">
                 <div class="card-body p-4 p-md-5">
-                    <form method="POST" enctype="multipart/form-data" novalidate>
+                    <form method="POST" enctype="multipart/form-data" novalidate id="recipeForm">
                         {% csrf_token %}
+
+                        <!-- Mobile-First Save Button -->
+                        <div class="d-grid d-md-none gap-2 mb-4">
+                            <button type="submit" class="btn btn-success btn-lg fw-bold shadow-sm rounded-pill py-3">
+                                <i class="bi bi-check-lg"></i> {% if editing %}Update Recipe{% else %}Save Recipe{% endif %}
+                            </button>
+                        </div>
 
                         <!-- Main Title -->
                         <div class="mb-5">
@@ -55,31 +60,22 @@
                             <label class="form-label fw-bold d-flex align-items-center gap-2 mb-3">
                                 <i class="bi bi-camera-fill text-success fs-5"></i> Recipe Photo
                             </label>
-                            {% if user.is_authenticated and user.is_paid_customer %}
-                                <div class="row align-items-center">
-                                    <div class="col-md-4 mb-3 mb-md-0">
-                                        {% if editing and form.instance.image %}
-                                            <img src="{{ form.instance.image.url }}" class="img-fluid rounded-3 shadow-sm border" style="max-height: 150px; width: 100%; object-fit: cover;">
-                                        {% else %}
-                                            <div class="bg-white border rounded-3 d-flex align-items-center justify-content-center text-muted" style="height: 150px;">
-                                                <i class="bi bi-image display-4 opacity-25"></i>
-                                            </div>
-                                        {% endif %}
-                                    </div>
-                                    <div class="col-md-8">
-                                        {{ form.image }}
-                                        <div class="form-text mt-2 small">Photos make your cookbook look amazing!</div>
-                                        {% if form.image.errors %}<div class="text-danger small mt-1">{{ form.image.errors }}</div>{% endif %}
-                                    </div>
+                            <div class="row align-items-center">
+                                <div class="col-md-4 mb-3 mb-md-0">
+                                    {% if editing and form.instance.image %}
+                                        <img src="{{ form.instance.image.url }}" class="img-fluid rounded-3 shadow-sm border" style="max-height: 150px; width: 100%; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-white border rounded-3 d-flex align-items-center justify-content-center text-muted" style="height: 150px;">
+                                            <i class="bi bi-image display-4 opacity-25"></i>
+                                        </div>
+                                    {% endif %}
                                 </div>
-                            {% else %}
-                                <div class="p-3 bg-white border rounded-3 text-center">
-                                    <i class="bi bi-star-fill text-warning fs-4 mb-2"></i>
-                                    <p class="mb-1 fw-bold">Upgrade to add photos!</p>
-                                    <p class="small text-muted mb-2">Make your recipes shine with beautiful images.</p>
-                                    <a href="#" class="btn btn-warning btn-sm rounded-pill">Upgrade to Premium</a>
+                                <div class="col-md-8">
+                                    {{ form.image }}
+                                    <div class="form-text mt-2 small">Photos make your cookbook look amazing!</div>
+                                    {% if form.image.errors %}<div class="text-danger small mt-1">{{ form.image.errors }}</div>{% endif %}
                                 </div>
-                            {% endif %}
+                            </div>
                         </div>
 
                         <!-- Timing & Sharing -->
@@ -152,4 +148,24 @@
     textarea { min-height: 150px; }
     .form-switch .form-check-input { width: 3em; height: 1.5em; cursor: pointer; }
 </style>
+<script>
+    // Handle Magic Importer Loading State
+    const importForm = document.getElementById('importForm');
+    const importBtn = document.getElementById('importBtn');
+    
+    if (importForm && importBtn) {
+        importForm.addEventListener('submit', function() {
+            importBtn.disabled = true;
+            document.getElementById('importText').innerText = 'Analyzing Recipe...';
+            document.getElementById('importSpinner').classList.remove('d-none');
+        });
+    }
+
+    // Auto-apply Bootstrap classes to form elements
+    document.querySelectorAll('input, textarea, select').forEach(el => {
+        if (el.type !== 'checkbox' && el.type !== 'file') {
+            el.classList.add('form-control');
+        }
+    });
+</script>
 {% endblock %}

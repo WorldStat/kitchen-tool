@@ -6,6 +6,15 @@ class RecipeForm(forms.ModelForm):
     prep_time = forms.IntegerField(required=False, initial=0, widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Minutes'}))
     cook_time = forms.IntegerField(required=False, initial=0, widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Minutes'}))
 
+    def clean_servings(self):
+        return self.cleaned_data.get('servings') or 1
+    
+    def clean_prep_time(self):
+        return self.cleaned_data.get('prep_time') or 0
+    
+    def clean_cook_time(self):
+        return self.cleaned_data.get('cook_time') or 0
+
     class Meta:
         model = Recipe
         fields = ['title', 'ingredients', 'instructions', 'servings', 'prep_time', 'cook_time', 'image', 'source_url', 'is_public']

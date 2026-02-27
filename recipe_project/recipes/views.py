@@ -112,12 +112,16 @@ def create_recipe(request):
             client = boto3.client('bedrock-runtime', region_name='ca-central-1')
             model_id = "anthropic.claude-3-haiku-20240307-v1:0"
             system_prompt = (
-                "You are a recipe data extractor. Return ONLY a raw JSON object with these keys: "
-                "'title', 'ingredients' (list of strings), 'instructions' (string), "
-                "'servings' (integer), 'prep_time' (integer, minutes), 'cook_time' (integer, minutes). "
-                "Do not include markdown backticks."
+                "You are a master chef and recipe data extractor. Extract data from the text into a raw JSON object with these keys: "
+                "'title' (string), "
+                "'ingredients' (list of strings, include quantities and measurements, e.g., '2 cups flour'), "
+                "'instructions' (string, step-by-step), "
+                "'servings' (integer - MUST BE AN INTEGER. If not found, estimate based on ingredient quantities), "
+                "'prep_time' (integer, minutes), "
+                "'cook_time' (integer, minutes). "
+                "Return ONLY raw JSON, no markdown backticks."
             )
-            bedrock_messages = [{"role": "user", "content": [{"text": f"Extract: {text_content}"}]}]
+            bedrock_messages = [{"role": "user", "content": [{"text": f"Extract the recipe from: {text_content}"}]}]
             
             response = client.converse(
                 modelId=model_id,
@@ -126,15 +130,18 @@ def create_recipe(request):
                 inferenceConfig={"temperature": 0}
             )
             
-            ai_data = json.loads(re.sub(r'```json|```', '', response['output']['message']['content'][0]['text']).strip())
+            ai_data_raw = response['output']['message']['content'][0]['text']
+            # Improved JSON cleanup
+            ai_data_str = re.sub(r'```json|```', '', ai_data_raw).strip()
+            ai_data = json.loads(ai_data_str)
             
             initial_data = {
                 'title': ai_data.get('title', ''),
                 'ingredients': '\n'.join(ai_data.get('ingredients', [])),
                 'instructions': ai_data.get('instructions', ''),
-                'servings': ai_data.get('servings', 1),
-                'prep_time': ai_data.get('prep_time', 0),
-                'cook_time': ai_data.get('cook_time', 0),
+                'servings': ai_data.get('servings', 1) or 1, # Force default 1 if null
+                'prep_time': ai_data.get('prep_time', 0) or 0,
+                'cook_time': ai_data.get('cook_time', 0) or 0,
                 'source_url': import_url
             }
             messages.success(request, "AI extracted recipe data! Verify and save.")
