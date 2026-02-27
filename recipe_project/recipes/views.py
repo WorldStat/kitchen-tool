@@ -5,9 +5,11 @@ import re
 from bs4 import BeautifulSoup
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
+from recipe_scrapers import scrape_me
 from .models import Recipe
 from .forms import RecipeForm
 
@@ -52,15 +54,17 @@ def scrape_recipe_api(request):
         model_id = "anthropic.claude-3-haiku-20240307-v1:0"
         
         system_prompt = (
-            "You are a recipe data extractor. Return ONLY a raw JSON object with keys: "
-            "'title', 'ingredients', 'instructions'. Do not include markdown backticks."
+            "You are a recipe data extractor. Return ONLY a raw JSON object with these keys: "
+            "'title', 'ingredients' (list of strings), 'instructions' (string), "
+            "'servings' (integer), 'prep_time' (integer, minutes), 'cook_time' (integer, minutes). "
+            "Do not include markdown backticks."
         )
         
-        messages = [{"role": "user", "content": [{"text": f"Extract: {text_content}"}]}]
+        bedrock_messages = [{"role": "user", "content": [{"text": f"Extract: {text_content}"}]}]
 
         response = client.converse(
             modelId=model_id,
-            messages=messages,
+            messages=bedrock_messages,
             system=[{"text": system_prompt}],
             inferenceConfig={"temperature": 0}
         )
@@ -88,29 +92,66 @@ def recipe_list(request):
 
 @login_required
 def create_recipe(request):
-    """Handles new recipe creation."""
+    """Handles new recipe creation with AI-powered scraping."""
     initial_data = {}
     import_url = request.GET.get('import_url', '')
 
-    # 1. THE SCRAPER LOGIC (Premium Feature)
+    # 1. THE SCRAPER LOGIC
     if import_url:
-        if request.user.is_paid_customer:
+        try:
+            # Try AI extraction first (via internal logic from scrape_recipe_api)
+            # This ensures we get the most fields auto-filled correctly.
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            res = requests.get(import_url, headers=headers, timeout=10)
+            res.raise_for_status()
+            soup = BeautifulSoup(res.content, 'html.parser')
+            for tag in soup(["script", "style", "nav", "footer", "header", "aside", "svg"]):
+                tag.decompose()
+            text_content = soup.get_text(separator=' ', strip=True)[:15000]
+
+            client = boto3.client('bedrock-runtime', region_name='ca-central-1')
+            model_id = "anthropic.claude-3-haiku-20240307-v1:0"
+            system_prompt = (
+                "You are a recipe data extractor. Return ONLY a raw JSON object with these keys: "
+                "'title', 'ingredients' (list of strings), 'instructions' (string), "
+                "'servings' (integer), 'prep_time' (integer, minutes), 'cook_time' (integer, minutes). "
+                "Do not include markdown backticks."
+            )
+            bedrock_messages = [{"role": "user", "content": [{"text": f"Extract: {text_content}"}]}]
+            
+            response = client.converse(
+                modelId=model_id,
+                messages=bedrock_messages,
+                system=[{"text": system_prompt}],
+                inferenceConfig={"temperature": 0}
+            )
+            
+            ai_data = json.loads(re.sub(r'```json|```', '', response['output']['message']['content'][0]['text']).strip())
+            
+            initial_data = {
+                'title': ai_data.get('title', ''),
+                'ingredients': '\n'.join(ai_data.get('ingredients', [])),
+                'instructions': ai_data.get('instructions', ''),
+                'servings': ai_data.get('servings', 1),
+                'prep_time': ai_data.get('prep_time', 0),
+                'cook_time': ai_data.get('cook_time', 0),
+                'source_url': import_url
+            }
+            messages.success(request, "AI extracted recipe data! Verify and save.")
+        except Exception as e:
+            # Fallback to rule-based scraper
             try:
-                # Assuming scrape_me() returns a dictionary-like object with title, ingredients, etc.
                 scraper = scrape_me(import_url)
                 initial_data = {
                     'title': scraper.title(),
                     'ingredients': '\n'.join(scraper.ingredients()),
                     'instructions': scraper.instructions(),
                     'servings': scraper.yields(),
-                    'source_url': import_url # Keep the link for reference
+                    'source_url': import_url
                 }
-                messages.info(request, "Data imported! You can now add a photo and save.")
-            except Exception as e:
-                messages.error(request, f"Could not scrape this site. You can still enter it manually! Error: {e}")
-        else:
-            messages.warning(request, "Web import is a Premium feature. Please upgrade to use it.")
-            import_url = '' # Clear the URL to prevent re-attempt if not paid
+                messages.info(request, "Data imported via standard scraper! You can now add a photo and save.")
+            except Exception as e2:
+                messages.error(request, f"Could not scrape this site. You can still enter it manually! Error: {e2}")
 
     # 2. THE SAVE LOGIC
     if request.method == 'POST':
@@ -118,19 +159,12 @@ def create_recipe(request):
         if form.is_valid():
             recipe = form.save(commit=False)
             recipe.owner = request.user
-            
-            # Image Check (Premium Feature)
-            if recipe.image and not request.user.is_paid_customer:
-                recipe.image = None # Discard image if not a paid customer
-                messages.warning(request, "Photos are a Premium feature. Recipe saved without image.")
-            
             recipe.save()
             messages.success(request, "Recipe added to your cookbook!")
             return redirect('recipe_list')
         else:
             messages.error(request, f"Error saving recipe. Please check the fields below. {form.errors}")
     else:
-        # Pre-fill the form with scraped data if it exists
         form = RecipeForm(initial=initial_data)
     
     return render(request, 'recipes/create.html', {'form': form, 'import_url': import_url})
@@ -146,16 +180,7 @@ def recipe_edit(request, pk):
     if request.method == 'POST':
         form = RecipeForm(request.POST, request.FILES, instance=recipe)
         if form.is_valid():
-            edited_recipe = form.save(commit=False)
-            
-            # Image Check (Premium Feature)
-            if edited_recipe.image and not request.user.is_paid_customer:
-                # Compare current image with the one from the database
-                if edited_recipe.image != recipe.image: 
-                    edited_recipe.image = recipe.image  # Revert to original image
-                    messages.warning(request, "Photos are a Premium feature. Image change ignored.")
-            
-            edited_recipe.save()
+            form.save()
             messages.success(request, "Recipe updated successfully!")
             return redirect('recipe_detail', pk=recipe.pk)
         else:
