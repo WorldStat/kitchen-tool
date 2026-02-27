@@ -113,12 +113,13 @@ def create_recipe(request):
             model_id = "anthropic.claude-3-haiku-20240307-v1:0"
             system_prompt = (
                 "You are a master chef and recipe data extractor. Extract data from the text into a raw JSON object with these keys: "
-                "'title' (string), "
-                "'ingredients' (list of strings, include quantities and measurements, e.g., '2 cups flour'), "
-                "'instructions' (string, step-by-step), "
+                "'title' (string, use professional Title Case, do NOT use ALL CAPS), "
+                "'ingredients' (list of strings, MUST include precise quantities and measurements, e.g., '500g Chicken' or '2 tbsp Olive Oil'), "
+                "'instructions' (string, step-by-step, use professional Sentence Case), "
                 "'servings' (integer - MUST BE AN INTEGER. If not found, estimate based on ingredient quantities), "
                 "'prep_time' (integer, minutes), "
                 "'cook_time' (integer, minutes). "
+                "Ensure all text is formatted professionally (no ALL CAPS, correct punctuation)."
                 "Return ONLY raw JSON, no markdown backticks."
             )
             bedrock_messages = [{"role": "user", "content": [{"text": f"Extract the recipe from: {text_content}"}]}]
@@ -135,11 +136,15 @@ def create_recipe(request):
             ai_data_str = re.sub(r'```json|```', '', ai_data_raw).strip()
             ai_data = json.loads(ai_data_str)
             
+            # Professional formatting fallback for Title
+            raw_title = ai_data.get('title', '').strip()
+            formatted_title = raw_title.title() if raw_title.isupper() else raw_title
+
             initial_data = {
-                'title': ai_data.get('title', ''),
+                'title': formatted_title,
                 'ingredients': '\n'.join(ai_data.get('ingredients', [])),
                 'instructions': ai_data.get('instructions', ''),
-                'servings': ai_data.get('servings', 1) or 1, # Force default 1 if null
+                'servings': ai_data.get('servings', 1) or 1,
                 'prep_time': ai_data.get('prep_time', 0) or 0,
                 'cook_time': ai_data.get('cook_time', 0) or 0,
                 'source_url': import_url
