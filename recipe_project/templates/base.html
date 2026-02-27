@@ -90,6 +90,20 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(188, 71, 73, 0.3);
         }
+
+        /* Footer Styling */
+        footer {
+            background: var(--earth-green);
+            color: var(--sand);
+            padding: 60px 0 120px; /* Extra bottom padding for mobile nav */
+            margin-top: 80px;
+            border-radius: 50px 50px 0 0;
+        }
+        @media (min-width: 992px) {
+            footer { padding-bottom: 60px; }
+        }
+        footer a { color: var(--moss); text-decoration: none; transition: 0.3s; }
+        footer a:hover { color: var(--sand); }
     </style>
 </head>
 <body>
@@ -130,7 +144,7 @@
         </div>
     </nav>
 
-    <main class="container mt-3">
+    <main class="container mt-3" style="min-height: 70vh;">
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
@@ -142,6 +156,49 @@
 
         {% block content %}{% endblock %}
     </main>
+
+    <footer>
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <h3 class="fw-bold mb-3">🌿 KitchenTool</h3>
+                    <p class="opacity-75">Empowering creative chefs to feed the planet. Join our mission to cook smarter and more sustainably.</p>
+                </div>
+                <div class="col-6 col-lg-2 offset-lg-2">
+                    <h6 class="fw-bold text-uppercase small mb-3">Navigation</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="{% url 'community_cookbook' %}">Community</a></li>
+                        {% if user.is_authenticated %}
+                        <li><a href="{% url 'recipe_list' %}">My Cookbook</a></li>
+                        <li><a href="{% url 'shopping_list_history' %}">Shopping Lists</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <h6 class="fw-bold text-uppercase small mb-3">Account</h6>
+                    <ul class="list-unstyled small">
+                        {% if user.is_authenticated %}
+                        <li><a href="{% url 'profile' %}">My Dashboard</a></li>
+                        {% else %}
+                        <li><a href="{% url 'login' %}">Sign In</a></li>
+                        <li><a href="{% url 'register' %}">Create Account</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="col-lg-2 text-lg-end">
+                    <h6 class="fw-bold text-uppercase small mb-3">Follow Us</h6>
+                    <div class="d-flex gap-3 justify-content-lg-end">
+                        <a href="#" class="fs-4"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="fs-4"><i class="bi bi-twitter"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-5 opacity-10">
+            <div class="text-center small opacity-50">
+                &copy; {% now "Y" %} KitchenTool. Built for the Earth.
+            </div>
+        </div>
+    </footer>
 
     {% if user.is_authenticated %}
     <div class="mobile-bottom-nav d-lg-none">

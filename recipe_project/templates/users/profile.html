@@ -1,90 +1,115 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row">
+<div class="container py-5 fade-in">
+    <div class="row g-4">
         <!-- Profile Header -->
-        <div class="col-12 mb-5">
-            <div class="card border-0 shadow-sm p-4 bg-white" style="border-radius: 20px;">
-                <div class="d-flex align-items-center gap-4">
-                    <div class="bg-success bg-opacity-10 text-success p-4 rounded-circle">
-                        <i class="bi bi-person-circle display-4"></i>
+        <div class="col-12 mb-2">
+            <div class="natural-glass p-4 p-md-5">
+                <div class="d-flex flex-column flex-md-row align-items-center gap-4 text-center text-md-start">
+                    <div class="avatar-giant bg-earth shadow-lg">
+                        {{ user.username|slice:":1"|upper }}
                     </div>
                     <div>
-                        <h1 class="fw-bold text-dark mb-1">Hello, {{ user.username }}!</h1>
-                        <p class="text-muted mb-0">Member since {{ user.date_joined|date:"F Y" }}</p>
+                        <h1 class="display-4 fw-bold text-dark mb-1">Kitchen of {{ user.username }}</h1>
+                        <p class="lead text-muted mb-0"><i class="bi bi-stars text-warning"></i> Master Chef since {{ user.date_joined|date:"F Y" }}</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Stats Grid -->
-        <div class="col-md-3 mb-4">
-            <div class="card border-0 shadow-sm text-center h-100 p-4" style="border-radius: 15px;">
-                <h6 class="text-muted text-uppercase small fw-bold">My Cookbook</h6>
-                <div class="display-5 fw-bold text-success my-2">{{ recipe_count }}</div>
-                <p class="small text-muted mb-0">Total Recipes</p>
+        <div class="col-6 col-lg-3">
+            <div class="natural-glass text-center p-4 h-100 shadow-sm border-bottom border-success border-4">
+                <h6 class="text-muted text-uppercase small fw-bold">Cookbook</h6>
+                <div class="display-4 fw-bold text-success my-2">{{ recipe_count }}</div>
+                <p class="small text-muted mb-0">Original Creations</p>
                 <a href="{% url 'recipe_list' %}" class="stretched-link"></a>
             </div>
         </div>
-        <div class="col-md-3 mb-4">
-            <div class="card border-0 shadow-sm text-center h-100 p-4" style="border-radius: 15px;">
-                <h6 class="text-muted text-uppercase small fw-bold">Shared Publicly</h6>
-                <div class="display-5 fw-bold text-primary my-2">{{ public_recipe_count }}</div>
-                <p class="small text-muted mb-0">Recipes Shared</p>
+        <div class="col-6 col-lg-3">
+            <div class="natural-glass text-center p-4 h-100 shadow-sm border-bottom border-primary border-4">
+                <h6 class="text-muted text-uppercase small fw-bold">Public</h6>
+                <div class="display-4 fw-bold text-primary my-2">{{ public_recipe_count }}</div>
+                <p class="small text-muted mb-0">Shared Globally</p>
             </div>
         </div>
-        <div class="col-md-3 mb-4">
-            <div class="card border-0 shadow-sm text-center h-100 p-4" style="border-radius: 15px;">
-                <h6 class="text-muted text-uppercase small fw-bold">Shopping Lists</h6>
-                <div class="display-5 fw-bold text-warning my-2">{{ list_count }}</div>
-                <p class="small text-muted mb-0">Lists Created</p>
+        <div class="col-6 col-lg-3">
+            <div class="natural-glass text-center p-4 h-100 shadow-sm border-bottom border-warning border-4">
+                <h6 class="text-muted text-uppercase small fw-bold">Shopping</h6>
+                <div class="display-4 fw-bold text-warning my-2">{{ list_count }}</div>
+                <p class="small text-muted mb-0">Active Lists</p>
                 <a href="{% url 'shopping_list_history' %}" class="stretched-link"></a>
             </div>
         </div>
-        <div class="col-md-3 mb-4">
-            <div class="card border-0 shadow-sm text-center h-100 p-4" style="border-radius: 15px;">
-                <h6 class="text-muted text-uppercase small fw-bold">Collaborating</h6>
-                <div class="display-5 fw-bold text-info my-2">{{ shared_list_count }}</div>
-                <p class="small text-muted mb-0">Shared with me</p>
+        <div class="col-6 col-lg-3">
+            <div class="natural-glass text-center p-4 h-100 shadow-sm border-bottom border-danger border-4">
+                <h6 class="text-muted text-uppercase small fw-bold">Shared</h6>
+                <div class="display-4 fw-bold text-danger my-2">{{ shared_list_count }}</div>
+                <p class="small text-muted mb-0">Collaborations</p>
             </div>
         </div>
 
         <!-- Quick Actions -->
-        <div class="col-lg-8 mt-4">
-            <div class="card border-0 shadow-sm p-4 bg-white" style="border-radius: 20px;">
-                <h4 class="fw-bold mb-4">Quick Actions</h4>
+        <div class="col-lg-8 mt-2">
+            <div class="natural-glass p-4 p-md-5">
+                <h3 class="fw-bold mb-4 d-flex align-items-center">
+                    <i class="bi bi-lightning-charge-fill text-warning me-2"></i> Quick Actions
+                </h3>
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <a href="{% url 'create_recipe' %}" class="btn btn-outline-success w-100 py-3 text-start d-flex align-items-center px-4">
-                            <i class="bi bi-journal-plus fs-3 me-3"></i>
+                        <a href="{% url 'create_recipe' %}" class="btn btn-earth w-100 py-3 text-start d-flex align-items-center px-4">
+                            <i class="bi bi-journal-plus fs-2 me-3"></i>
                             <div>
                                 <div class="fw-bold">Create New Recipe</div>
-                                <div class="small opacity-75">Add to your private cookbook</div>
+                                <div class="small opacity-75">Add your latest masterpiece</div>
                             </div>
                         </a>
                     </div>
                     <div class="col-md-6">
-                        <a href="{% url 'community_cookbook' %}" class="btn btn-outline-primary w-100 py-3 text-start d-flex align-items-center px-4">
-                            <i class="bi bi-globe fs-3 me-3"></i>
+                        <a href="{% url 'community_cookbook' %}" class="btn btn-outline-dark border-2 w-100 py-3 text-start d-flex align-items-center px-4 rounded-4">
+                            <i class="bi bi-globe fs-2 me-3"></i>
                             <div>
-                                <div class="fw-bold">Explore Community</div>
-                                <div class="small opacity-75">See recipes from other chefs</div>
+                                <div class="fw-bold text-dark">Explore Community</div>
+                                <div class="small text-muted">Discover and clone recipes</div>
                             </div>
                         </a>
                     </div>
                     <div class="col-md-6">
-                        <a href="{% url 'shopping_list_create' %}" class="btn btn-outline-warning w-100 py-3 text-start d-flex align-items-center px-4">
-                            <i class="bi bi-cart-plus fs-3 me-3"></i>
+                        <a href="{% url 'shopping_list_create' %}" class="btn btn-outline-warning border-2 w-100 py-3 text-start d-flex align-items-center px-4 rounded-4 shadow-sm">
+                            <i class="bi bi-cart-plus-fill fs-2 me-3 text-warning"></i>
                             <div>
-                                <div class="fw-bold">Start Shopping List</div>
-                                <div class="small opacity-75">Plan your next grocery trip</div>
+                                <div class="fw-bold text-dark">Start Shopping List</div>
+                                <div class="small text-muted">Plan your weekly harvest</div>
                             </div>
                         </a>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Small Mission Note -->
+        <div class="col-lg-4 mt-2">
+            <div class="natural-glass p-4 p-md-5 h-100 bg-earth text-white border-0 shadow-lg">
+                <div class="display-1 opacity-20 mb-3">🌿</div>
+                <h4 class="fw-bold">Chef's Mission</h4>
+                <p class="opacity-75">"Creative people cook and feed the planet."</p>
+                <hr class="opacity-25">
+                <p class="small mb-0">Every recipe you save and every list you share helps create a more sustainable, connected world. Keep cooking with heart.</p>
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+    .bg-earth { background: linear-gradient(135deg, var(--earth-green), var(--sage)); }
+    .avatar-giant {
+        width: 100px; height: 100px;
+        border-radius: 30px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 3rem; font-weight: 900; color: white;
+        transform: rotate(-5deg);
+    }
+    .rounded-4 { border-radius: 20px !important; }
+</style>
 {% endblock %}
