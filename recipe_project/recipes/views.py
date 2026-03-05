@@ -207,9 +207,13 @@ def create_recipe(request):
     
     return render(request, 'recipes/create.html', {'form': form, 'import_url': import_url})
 
-@login_required
 def recipe_detail(request, pk):
-    recipe = get_object_or_404(Recipe, pk=pk)
+    # Allow viewing if public OR if the current user is the owner
+    from django.db.models import Q
+    if request.user.is_authenticated:
+        recipe = get_object_or_404(Recipe, Q(pk=pk) & (Q(owner=request.user) | Q(is_public=True)))
+    else:
+        recipe = get_object_or_404(Recipe, pk=pk, is_public=True)
     return render(request, 'recipes/recipe_detail.html', {'recipe': recipe})
 
 @login_required
@@ -238,12 +242,23 @@ def recipe_delete(request, pk):
 
 @login_required
 def clone_recipe(request, pk):
-    # Fixed: Changed 'author' to 'owner'
-    original = get_object_or_404(Recipe, pk=pk, owner=request.user)
+    # Allow cloning if it's public or owned by the user
+    from django.db.models import Q
+    original = get_object_or_404(Recipe, Q(pk=pk) & (Q(owner=request.user) | Q(is_public=True)))
     
-    cloned = original
-    cloned.pk = None 
-    cloned.title = f"Copy of {original.title}"
-    cloned.save()
+    # Create a fresh copy
+    cloned = Recipe.objects.create(
+        owner=request.user,
+        title=f"Copy of {original.title}",
+        ingredients=original.ingredients,
+        instructions=original.instructions,
+        servings=original.servings,
+        prep_time=original.prep_time,
+        cook_time=original.cook_time,
+        image=original.image,
+        source_url=original.source_url,
+        is_public=False  # New copy is private by default
+    )
     
+    messages.success(request, f"Cloned '{original.title}' to your cookbook!")
     return redirect('recipe_edit', pk=cloned.pk)
