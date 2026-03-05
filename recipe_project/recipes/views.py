@@ -94,35 +94,52 @@ def recipe_list(request):
 def create_recipe(request):
     """Handles new recipe creation with AI-powered scraping."""
     initial_data = {}
-    import_url = request.GET.get('import_url', '')
+    import_url = request.GET.get('import_url', '').strip()
 
     # 1. THE SCRAPER LOGIC
     if import_url:
         try:
-            # Try AI extraction first (via internal logic from scrape_recipe_api)
-            # This ensures we get the most fields auto-filled correctly.
-            headers = {'User-Agent': 'Mozilla/5.0'}
-            res = requests.get(import_url, headers=headers, timeout=10)
+            # 1a. Fetch the page content
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept-Language': 'en-US,en;q=0.9',
+            }
+            res = requests.get(import_url, headers=headers, timeout=15)
             res.raise_for_status()
             soup = BeautifulSoup(res.content, 'html.parser')
-            for tag in soup(["script", "style", "nav", "footer", "header", "aside", "svg"]):
-                tag.decompose()
-            text_content = soup.get_text(separator=' ', strip=True)[:15000]
 
+            # 1b. Social Media Fallback (Instagram/TikTok/etc)
+            # These sites often block the main body but leave OpenGraph tags readable
+            text_to_parse = ""
+            if "instagram.com" in import_url or "tiktok.com" in import_url:
+                meta_desc = soup.find("meta", property="og:description")
+                if meta_desc:
+                    text_to_parse = meta_desc.get("content", "")
+                
+            # If not social media or meta-desc failed, use standard body text
+            if not text_to_parse:
+                for tag in soup(["script", "style", "nav", "footer", "header", "aside", "svg"]):
+                    tag.decompose()
+                text_to_parse = soup.get_text(separator=' ', strip=True)[:15000]
+
+            if not text_to_parse or len(text_to_parse) < 20:
+                raise ValueError("Could not extract enough text from the page. The site might be blocking us.")
+
+            # 1c. AI Extraction via Bedrock
             client = boto3.client('bedrock-runtime', region_name='ca-central-1')
             model_id = "anthropic.claude-3-haiku-20240307-v1:0"
             system_prompt = (
                 "You are a master chef and recipe data extractor. Extract data from the text into a raw JSON object with these keys: "
-                "'title' (string, use professional Title Case, do NOT use ALL CAPS), "
-                "'ingredients' (list of strings, MUST include precise quantities and measurements, e.g., '500g Chicken' or '2 tbsp Olive Oil'), "
-                "'instructions' (string, step-by-step, use professional Sentence Case), "
-                "'servings' (integer - MUST BE AN INTEGER. If not found, estimate based on ingredient quantities), "
+                "'title' (string, use professional Title Case), "
+                "'ingredients' (list of strings, include precise quantities), "
+                "'instructions' (string, step-by-step), "
+                "'servings' (integer), "
                 "'prep_time' (integer, minutes), "
                 "'cook_time' (integer, minutes). "
-                "Ensure all text is formatted professionally (no ALL CAPS, correct punctuation)."
                 "Return ONLY raw JSON, no markdown backticks."
             )
-            bedrock_messages = [{"role": "user", "content": [{"text": f"Extract the recipe from: {text_content}"}]}]
+            
+            bedrock_messages = [{"role": "user", "content": [{"text": f"Extract recipe from: {text_to_parse}"}]}]
             
             response = client.converse(
                 modelId=model_id,
@@ -132,16 +149,11 @@ def create_recipe(request):
             )
             
             ai_data_raw = response['output']['message']['content'][0]['text']
-            # Improved JSON cleanup
             ai_data_str = re.sub(r'```json|```', '', ai_data_raw).strip()
             ai_data = json.loads(ai_data_str)
             
-            # Professional formatting fallback for Title
-            raw_title = ai_data.get('title', '').strip()
-            formatted_title = raw_title.title() if raw_title.isupper() else raw_title
-
             initial_data = {
-                'title': formatted_title,
+                'title': ai_data.get('title', '').strip().title(),
                 'ingredients': '\n'.join(ai_data.get('ingredients', [])),
                 'instructions': ai_data.get('instructions', ''),
                 'servings': ai_data.get('servings', 1) or 1,
@@ -149,9 +161,10 @@ def create_recipe(request):
                 'cook_time': ai_data.get('cook_time', 0) or 0,
                 'source_url': import_url
             }
-            messages.success(request, "AI extracted recipe data! Verify and save.")
+            messages.success(request, "AI extracted recipe data successfully!")
+
         except Exception as e:
-            # Fallback to rule-based scraper
+            # Last resort fallback: rule-based scraper
             try:
                 scraper = scrape_me(import_url)
                 initial_data = {
@@ -161,12 +174,25 @@ def create_recipe(request):
                     'servings': scraper.yields(),
                     'source_url': import_url
                 }
-                messages.info(request, "Data imported via standard scraper! You can now add a photo and save.")
+                messages.info(request, "Imported via standard scraper. Review and save.")
             except Exception as e2:
-                messages.error(request, f"Could not scrape this site. You can still enter it manually! Error: {e2}")
+                messages.error(request, f"Magic Import failed. You can still enter it manually! (Error: {e})")
 
     # 2. THE SAVE LOGIC
     if request.method == 'POST':
+        form = RecipeForm(request.POST, request.FILES)
+        if form.is_valid():
+            recipe = form.save(commit=False)
+            recipe.owner = request.user
+            recipe.save()
+            messages.success(request, "Recipe added to your cookbook!")
+            return redirect('recipe_list')
+        else:
+            messages.error(request, f"Error saving recipe. Please check the fields below. {form.errors}")
+    else:
+        form = RecipeForm(initial=initial_data)
+    
+    return render(request, 'recipes/create.html', {'form': form, 'import_url': import_url})
         form = RecipeForm(request.POST, request.FILES)
         if form.is_valid():
             recipe = form.save(commit=False)
