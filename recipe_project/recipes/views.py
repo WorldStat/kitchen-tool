@@ -193,19 +193,6 @@ def create_recipe(request):
         form = RecipeForm(initial=initial_data)
     
     return render(request, 'recipes/create.html', {'form': form, 'import_url': import_url})
-        form = RecipeForm(request.POST, request.FILES)
-        if form.is_valid():
-            recipe = form.save(commit=False)
-            recipe.owner = request.user
-            recipe.save()
-            messages.success(request, "Recipe added to your cookbook!")
-            return redirect('recipe_list')
-        else:
-            messages.error(request, f"Error saving recipe. Please check the fields below. {form.errors}")
-    else:
-        form = RecipeForm(initial=initial_data)
-    
-    return render(request, 'recipes/create.html', {'form': form, 'import_url': import_url})
 
 def recipe_detail(request, pk):
     # Allow viewing if public OR if the current user is the owner
